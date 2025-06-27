@@ -44,3 +44,23 @@ function loadImageFromFile(file) {
     reader.readAsDataURL(file);
   });
 }
+
+function downloadAll(processedBlobs) {
+  if (!processedBlobs.length) {
+    alert("No processed images to download.");
+    return;
+  }
+
+  const zip = new JSZip();
+
+  processedBlobs.forEach(({ blob, name }) => {
+    if (!blob) return;
+    const extension = name.split(".").pop();
+    const baseName = name.replace(/\.[^/.]+$/, "");
+    zip.file(`${baseName}.${extension}`, blob);
+  });
+
+  zip.generateAsync({ type: "blob" }).then(content => {
+    saveAs(content, "optimizeprime_images.zip");
+  });
+}
