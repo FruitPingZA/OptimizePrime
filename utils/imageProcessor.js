@@ -17,7 +17,15 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 
   // Try compressing repeatedly until under target size or minimum quality
   do {
-    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+    blob = await new Promise(res => {
+      canvas.toBlob(res, `image/${format}`, quality);
+    });
+
+    if (!blob) {
+      alert(`Your browser does not support the "${format}" format for compression.`);
+      return { blob: null, previewURL: "", name: file.name };
+    }
+
     quality -= 0.05;
   } while (blob.size > targetSize && quality > 0.05);
 
@@ -35,4 +43,4 @@ function loadImageFromFile(file) {
     };
     reader.readAsDataURL(file);
   });
-} 
+}
