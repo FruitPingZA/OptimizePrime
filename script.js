@@ -62,6 +62,9 @@ async function processImages() {
 }
 
 function downloadAll() {
+  console.log("Download triggered");
+  console.log("processedBlobs:", processedBlobs);
+
   if (!processedBlobs.length) {
     alert("No processed images to download.");
     return;
