@@ -1,3 +1,4 @@
+// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 
 // Elements
@@ -22,10 +23,16 @@ textToSVGBtn.addEventListener("click", () => {
 
 dropArea.addEventListener("dragover", e => {
   e.preventDefault();
+  dropArea.style.backgroundColor = "#222";
+});
+
+dropArea.addEventListener("dragleave", () => {
+  dropArea.style.backgroundColor = "";
 });
 
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
+  dropArea.style.backgroundColor = "";
   const files = e.dataTransfer.files;
   handleFiles({ target: { files } });
 });
@@ -52,6 +59,7 @@ async function processImages() {
   for (const file of filesToProcess) {
     const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
     if (!blob) continue;
+
     const img = document.createElement("img");
     img.src = previewURL;
     img.alt = name;
@@ -62,26 +70,17 @@ async function processImages() {
 }
 
 function downloadAll() {
-  console.log("Download triggered");
-  console.log("processedBlobs:", processedBlobs);
-
   if (!processedBlobs.length) {
     alert("No processed images to download.");
     return;
   }
-
   const zip = new JSZip();
-
   processedBlobs.forEach(({ blob, name }) => {
-    if (!blob) return;
-    const extension = name.split(".").pop();
     const baseName = name.replace(/\.[^/.]+$/, "");
+    const extension = blob.type.split("/").pop();
     zip.file(`${baseName}.${extension}`, blob);
   });
-
   zip.generateAsync({ type: "blob" }).then(content => {
     saveAs(content, "optimizeprime_images.zip");
-  }).catch(err => {
-    console.error("ZIP generation failed:", err);
   });
 }
