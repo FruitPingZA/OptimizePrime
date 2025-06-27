@@ -6,6 +6,7 @@ document.getElementById("downloadAllBtn").addEventListener("click", downloadAll)
 document.getElementById("textToSVGBtn").addEventListener("click", () => {
   const text = prompt("Enter text to convert to SVG:");
   if (!text) return;
+
   const svgData = textToSVG(text);
   const blob = new Blob([svgData], { type: "image/svg+xml" });
   saveAs(blob, "label.svg");
@@ -15,14 +16,14 @@ const dropArea = document.getElementById("dropArea");
 
 dropArea.addEventListener("dragover", e => {
   e.preventDefault();
-  dropArea.classList.add("highlight");
 });
-dropArea.addEventListener("dragleave", () => dropArea.classList.remove("highlight"));
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  dropArea.classList.remove("highlight");
   document.getElementById("fileInput").files = e.dataTransfer.files;
   handleFiles({ target: { files: e.dataTransfer.files } });
+});
+dropArea.addEventListener("click", () => {
+  document.getElementById("fileInput").click();
 });
 
 let filesToProcess = [];
@@ -45,6 +46,7 @@ async function processImages() {
     const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
     const img = document.createElement("img");
     img.src = previewURL;
+    img.alt = name;
     preview.appendChild(img);
     processedBlobs.push({ blob, name });
   }
@@ -53,7 +55,7 @@ async function processImages() {
 function downloadAll() {
   const zip = new JSZip();
   processedBlobs.forEach(({ blob, name }) => {
-    zip.file(name.replace(/\.[^/.]+$/, "") + ".zipimg", blob);
+    zip.file(name.replace(/\.[^/.]+$/, "") + "." + name.split('.').pop(), blob);
   });
   zip.generateAsync({ type: "blob" }).then(content => {
     saveAs(content, "optimizeprime_images.zip");
