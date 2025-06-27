@@ -8,8 +8,7 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   canvas.height = img.height * scale;
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  // Optional: brightness adjustment
-  adjustBrightness(ctx, canvas.width, canvas.height, 1.1); // Slight enhancement
+  adjustBrightness(ctx, canvas.width, canvas.height, 1.1);
 
   let quality = 0.95;
   let blob;
@@ -24,7 +23,7 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
