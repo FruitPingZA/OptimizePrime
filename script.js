@@ -1,4 +1,3 @@
-// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 
 // Elements
@@ -52,6 +51,7 @@ async function processImages() {
 
   for (const file of filesToProcess) {
     const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+    if (!blob) continue;
     const img = document.createElement("img");
     img.src = previewURL;
     img.alt = name;
@@ -66,13 +66,19 @@ function downloadAll() {
     alert("No processed images to download.");
     return;
   }
+
   const zip = new JSZip();
+
   processedBlobs.forEach(({ blob, name }) => {
+    if (!blob) return;
     const extension = name.split(".").pop();
     const baseName = name.replace(/\.[^/.]+$/, "");
     zip.file(`${baseName}.${extension}`, blob);
   });
+
   zip.generateAsync({ type: "blob" }).then(content => {
     saveAs(content, "optimizeprime_images.zip");
+  }).catch(err => {
+    console.error("ZIP generation failed:", err);
   });
 }
