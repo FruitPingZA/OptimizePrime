@@ -1,55 +1,58 @@
 // svgConverter.js
 
-// Creates an SVG string from user input
-function generateSVG(text, font, color) {
-  return `
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
-  <style>
-    .text { font: 40px ${font}; fill: ${color}; }
-  </style>
-  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="text">${text}</text>
+let svgVisible = false;
+
+function textToSVG(text, fontFamily = "Arial", color = "black") {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="100">
+  <text x="10" y="50" font-family="${fontFamily}" font-size="40" fill="${color}">${text}</text>
 </svg>`;
 }
 
-// Updates the SVG preview and output window
-function updateSVGPreview() {
-  const text = document.getElementById("svgTextInput").value || "Sample";
-  const font = document.getElementById("svgFontSelect").value;
-  const color = document.getElementById("svgColorInput").value;
-  const css = document.getElementById("svgCustomCSS").value;
-
-  let svg = generateSVG(text, font, color);
-
-  // If custom CSS exists, inject it
-  if (css.trim()) {
-    svg = svg.replace(
-      /<\/style>/,
-      `${css.replace(/<\/?style>/g, "")}</style>`
-    );
-  }
-
-  document.getElementById("svgOutput").value = svg;
-  document.getElementById("svgLivePreview").innerHTML = svg;
+function toggleSVGEditor() {
+  const svgSection = document.getElementById("svgSection");
+  svgVisible = !svgVisible;
+  svgSection.style.display = svgVisible ? "block" : "none";
 }
 
-// Triggers download of SVG as file
+function updateSVGPreview() {
+  const text = document.getElementById("svgText").value;
+  const font = document.getElementById("svgFont").value;
+  const color = document.getElementById("svgColor").value;
+  const customCSS = document.getElementById("svgCSS").value;
+
+  const svgContent = textToSVG(text, font, color);
+  const styleBlock = `<style>${customCSS}</style>`;
+  const combined = svgContent.replace('</svg>', `${styleBlock}</svg>`);
+
+  const svgPreview = document.getElementById("svgPreview");
+  svgPreview.innerHTML = combined;
+}
+
 function downloadSVG() {
-  const svg = document.getElementById("svgOutput").value;
+  const svg = document.getElementById("svgPreview").innerHTML;
   const blob = new Blob([svg], { type: "image/svg+xml" });
   saveAs(blob, "generated.svg");
 }
 
-// Hooks
 document.addEventListener("DOMContentLoaded", () => {
-  const previewElements = ["svgTextInput", "svgFontSelect", "svgColorInput", "svgCustomCSS"];
-  previewElements.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener("input", updateSVGPreview);
+  const fontDropdown = document.getElementById("svgFont");
+  const fonts = ["Arial", "Verdana", "Helvetica", "Georgia", "Courier New", "Times New Roman"];
+
+  fonts.forEach(f => {
+    const option = document.createElement("option");
+    option.value = f;
+    option.textContent = f;
+    fontDropdown.appendChild(option);
   });
 
-  const downloadBtn = document.getElementById("downloadSVGBtn");
-  if (downloadBtn) downloadBtn.addEventListener("click", downloadSVG);
+  document.getElementById("svgText").addEventListener("input", updateSVGPreview);
+  document.getElementById("svgFont").addEventListener("change", updateSVGPreview);
+  document.getElementById("svgColor").addEventListener("input", updateSVGPreview);
+  document.getElementById("svgCSS").addEventListener("input", updateSVGPreview);
 
-  // Initial preview
+  document.getElementById("svgDownloadBtn").addEventListener("click", downloadSVG);
+  document.getElementById("svgToggleBtn").addEventListener("click", toggleSVGEditor);
+
   updateSVGPreview();
 });
