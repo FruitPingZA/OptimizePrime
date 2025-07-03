@@ -1,42 +1,47 @@
-// utils/editor.js
+// editor.js - Handles individual image editing before compression
 
-import { textToSVG, applyCustomCSSToSVG } from "./svgConverter.js";
+export function showImageEditor(imageIndex, imageData, onSave) {
+  const editorOverlay = document.createElement("div");
+  editorOverlay.className = "editor-overlay";
+  editorOverlay.innerHTML = `
+    <div class="editor-modal">
+      <h3>Edit Image Settings</h3>
+      <label>Max Width:
+        <input type="number" id="editWidth" value="${imageData.maxWidth || 800}">
+      </label>
+      <label>Max Height:
+        <input type="number" id="editHeight" value="${imageData.maxHeight || 800}">
+      </label>
+      <label>Target Size (KB):
+        <input type="number" id="editTargetSize" value="${imageData.targetSize || 200}">
+      </label>
+      <label>Format:
+        <select id="editFormat">
+          <option value="webp" ${imageData.format === 'webp' ? 'selected' : ''}>WebP</option>
+          <option value="avif" ${imageData.format === 'avif' ? 'selected' : ''}>AVIF</option>
+        </select>
+      </label>
+      <div class="editor-buttons">
+        <button id="saveImageEdit">Save</button>
+        <button id="cancelImageEdit">Cancel</button>
+      </div>
+    </div>
+  `;
 
-export function setupSVGEditor() {
-  const editorSection = document.getElementById("svgEditorSection");
-  const svgOutput = document.getElementById("svgOutput");
-  const cssInput = document.getElementById("svgCSSInput");
-  const fontInput = document.getElementById("svgFontInput");
-  const colorInput = document.getElementById("svgColorInput");
-  const textInput = document.getElementById("svgTextInput");
-  const downloadBtn = document.getElementById("svgDownloadBtn");
+  document.body.appendChild(editorOverlay);
 
-  if (!editorSection) return;
+  document.getElementById("cancelImageEdit").onclick = () => {
+    document.body.removeChild(editorOverlay);
+  };
 
-  function updateSVGPreview() {
-    const text = textInput.value;
-    const font = fontInput.value;
-    const color = colorInput.value;
-    const css = cssInput.value;
-
-    let svgContent = textToSVG(text, font, color);
-    svgContent = applyCustomCSSToSVG(svgContent, css);
-    svgOutput.innerHTML = svgContent;
-  }
-
-  // Update SVG preview on any input
-  [textInput, fontInput, colorInput, cssInput].forEach(input => {
-    input.addEventListener("input", updateSVGPreview);
-  });
-
-  downloadBtn.addEventListener("click", () => {
-    const blob = new Blob([svgOutput.innerHTML], { type: "image/svg+xml" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "custom.svg";
-    link.click();
-  });
-
-  // Initial preview
-  updateSVGPreview();
+  document.getElementById("saveImageEdit").onclick = () => {
+    const newData = {
+      maxWidth: parseInt(document.getElementById("editWidth").value),
+      maxHeight: parseInt(document.getElementById("editHeight").value),
+      targetSize: parseInt(document.getElementById("editTargetSize").value),
+      format: document.getElementById("editFormat").value
+    };
+    onSave(imageIndex, newData);
+    document.body.removeChild(editorOverlay);
+  };
 }
