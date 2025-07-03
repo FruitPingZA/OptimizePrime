@@ -1,24 +1,17 @@
-function textToSVG(text, font = "Arial", size = 48, color = "#ffffff") {
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="500" height="100">
-      <text x="0" y="${size}"
-            font-family="${font}"
-            font-size="${size}"
-            fill="${color}">${text}</text>
-    </svg>
-  `.trim();
-}
+// utils/svgConverter.js
 
-function canvasToSVG(canvas) {
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="${canvas.width}" height="${canvas.height}">
-      <image href="${canvas.toDataURL("image/png")}"
-             width="${canvas.width}"
-             height="${canvas.height}" />
-    </svg>
-  `.trim();
+export function textToSVG(text, font = "Arial", color = "#000", css = "") {
+  const escapedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="100">
+  <style>
+    text {
+      font-family: '${font}';
+      fill: ${color};
+    }
+    ${css}
+  </style>
+  <text x="10" y="50" font-size="40">${escapedText}</text>
+</svg>`;
+  return svg.trim();
 }
-
-window.textToSVG = textToSVG;
