@@ -1,131 +1,138 @@
-
 body {
-  font-family: Arial, sans-serif;
-  background: #0f0f0f;
-  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #0c0c0c;
+  color: #f0f0f0;
   margin: 0;
   padding: 20px;
 }
 
 .container {
   max-width: 960px;
-  margin: 0 auto;
+  margin: auto;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
 }
 
 h1 {
   text-align: center;
+  color: #ff77aa;
+  font-size: 2.5em;
   margin-bottom: 20px;
 }
 
 .drop-area {
-  border: 2px dashed #aaa;
-  padding: 20px;
+  border: 2px dashed #666;
+  border-radius: 10px;
+  padding: 40px;
   text-align: center;
   margin-bottom: 20px;
   cursor: pointer;
-  background-color: #1b1b1b;
-  border-radius: 8px;
-  transition: background 0.2s ease-in-out;
-}
-
-.drop-area:hover {
   background-color: #2a2a2a;
 }
 
 .upload-label {
-  color: #00bfff;
-  cursor: pointer;
+  color: #ff77aa;
   text-decoration: underline;
+  cursor: pointer;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
 .controls label {
-  margin-right: 10px;
-  display: inline-block;
-  margin-top: 10px;
-  color: #ccc;
+  display: flex;
+  flex-direction: column;
+  color: #ddd;
+  flex: 1 1 150px;
 }
 
-input[type="number"],
-select {
-  background: #222;
-  border: 1px solid #555;
-  color: #fff;
-  padding: 6px;
-  border-radius: 4px;
+.controls input,
+.controls select {
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: none;
+  background-color: #333;
+  color: #f0f0f0;
 }
 
 button {
-  margin-top: 10px;
-  margin-right: 10px;
-  padding: 8px 16px;
-  background-color: #00bfff;
-  color: white;
+  padding: 10px 20px;
   border: none;
+  border-radius: 6px;
+  background-color: #ff77aa;
+  color: white;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s ease-in-out;
+  margin-top: 10px;
+  transition: background-color 0.2s;
 }
 
 button:hover {
-  background-color: #0095cc;
+  background-color: #ff5f99;
+}
+
+.preview-img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+  border: 1px solid #444;
+  border-radius: 6px;
+  display: block;
 }
 
 #preview {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 20px;
 }
 
-.preview-img {
-  max-width: 150px;
-  max-height: 150px;
-  border: 1px solid #ccc;
-  padding: 4px;
-  background: #1e1e1e;
-  border-radius: 4px;
-}
-
-#svgEditor {
-  display: none;
-  margin-top: 30px;
-  padding: 20px;
-  background: #1c1c1c;
+.image-card {
+  background: #222;
+  padding: 10px;
   border-radius: 8px;
+}
+
+.image-card input {
+  margin-top: 5px;
+  width: 100%;
+}
+
+.svg-editor {
+  background-color: #111;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 30px;
   border: 1px solid #444;
 }
 
-#svgEditor input[type="text"],
-#svgEditor textarea {
-  width: 100%;
-  padding: 6px;
-  margin: 6px 0;
-  background: #222;
+.svg-editor h3 {
+  color: #ff77aa;
+  margin-top: 0;
+}
+
+.svg-editor input,
+.svg-editor textarea,
+.svg-editor select {
+  background-color: #222;
   color: #fff;
-  border: 1px solid #555;
-  border-radius: 4px;
-}
-
-#svgEditor input[type="color"] {
-  margin-left: 10px;
-  vertical-align: middle;
-}
-
-.svg-container {
-  margin-top: 15px;
-  background: white;
+  border: 1px solid #444;
+  border-radius: 6px;
   padding: 10px;
-  border-radius: 4px;
-  max-height: 300px;
-  overflow: auto;
-  color: black;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: monospace;
+  margin: 10px 0;
+  width: 100%;
 }
 
-textarea#svgCssInput {
-  height: 120px;
-  font-family: monospace;
-  resize: vertical;
+#svgPreview {
+  background-color: #fff;
+  color: #000;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
 }
