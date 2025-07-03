@@ -1,137 +1,131 @@
+
 body {
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: #fff;
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #0e0e10;
-  color: #f2f2f2;
-  display: flex;
-  justify-content: center;
-  align-items: start;
-  padding: 40px 20px;
-  min-height: 100vh;
+  padding: 20px;
 }
 
 .container {
   max-width: 960px;
-  width: 100%;
-  background: #1c1c1e;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+  margin: 0 auto;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 30px;
-  color: #f2f2f2;
-  font-size: 32px;
+  margin-bottom: 20px;
 }
 
 .drop-area {
-  border: 2px dashed #6c63ff;
-  border-radius: 12px;
-  padding: 40px;
+  border: 2px dashed #aaa;
+  padding: 20px;
   text-align: center;
-  cursor: pointer;
-  background: #2b2b30;
   margin-bottom: 20px;
-  transition: background 0.3s;
+  cursor: pointer;
+  background-color: #1b1b1b;
+  border-radius: 8px;
+  transition: background 0.2s ease-in-out;
 }
 
 .drop-area:hover {
-  background: #343438;
+  background-color: #2a2a2a;
 }
 
 .upload-label {
-  color: #6c63ff;
-  text-decoration: underline;
+  color: #00bfff;
   cursor: pointer;
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
+  text-decoration: underline;
 }
 
 .controls label {
-  flex: 1 1 200px;
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
+  margin-right: 10px;
+  display: inline-block;
+  margin-top: 10px;
   color: #ccc;
 }
 
-.controls input,
-.controls select {
-  margin-top: 6px;
-  padding: 8px;
-  background: #2d2d33;
-  border: none;
+input[type="number"],
+select {
+  background: #222;
+  border: 1px solid #555;
   color: #fff;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
 }
 
 button {
-  background: #6c63ff;
+  margin-top: 10px;
+  margin-right: 10px;
+  padding: 8px 16px;
+  background-color: #00bfff;
+  color: white;
   border: none;
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  margin-top: 8px;
-  transition: background 0.3s;
+  border-radius: 4px;
+  transition: background 0.2s ease-in-out;
 }
 
 button:hover {
-  background: #857fff;
+  background-color: #0095cc;
 }
 
 #preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 20px;
 }
 
 .preview-img {
-  max-width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  max-width: 150px;
+  max-height: 150px;
+  border: 1px solid #ccc;
+  padding: 4px;
+  background: #1e1e1e;
+  border-radius: 4px;
 }
 
-/* SVG Editor */
 #svgEditor {
-  margin-top: 40px;
-  background: #1f1f22;
-  padding: 20px;
-  border-radius: 12px;
   display: none;
+  margin-top: 30px;
+  padding: 20px;
+  background: #1c1c1c;
+  border-radius: 8px;
+  border: 1px solid #444;
 }
 
-#svgEditor label {
-  display: block;
-  margin-bottom: 12px;
-  color: #eee;
-}
-
-#svgEditor input,
-#svgEditor select,
+#svgEditor input[type="text"],
 #svgEditor textarea {
   width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  background: #2d2d33;
+  padding: 6px;
+  margin: 6px 0;
+  background: #222;
   color: #fff;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid #555;
+  border-radius: 4px;
 }
 
-#svgPreviewContainer {
-  margin-top: 20px;
-  padding: 12px;
-  background: #2d2d33;
-  border-radius: 8px;
-  overflow-x: auto;
+#svgEditor input[type="color"] {
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+.svg-container {
+  margin-top: 15px;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow: auto;
+  color: black;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+}
+
+textarea#svgCssInput {
+  height: 120px;
+  font-family: monospace;
+  resize: vertical;
 }
