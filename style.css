@@ -1,113 +1,145 @@
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #1a1a1a;
-  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
+  background: #1a1a1a;
+  color: #f2f2f2;
 }
 
 .container {
   max-width: 900px;
-  margin: 30px auto;
+  margin: auto;
   padding: 20px;
-  background: #2a2a2a;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
 }
 
-h1 {
+h1, h2, h3 {
   text-align: center;
-  color: #ff4da6;
+  color: #ff4eb1;
 }
 
 .drop-area {
-  border: 2px dashed #ff4da6;
+  border: 2px dashed #ff4eb1;
   padding: 40px;
   text-align: center;
   border-radius: 10px;
   margin-bottom: 20px;
-  background: #1e1e1e;
   cursor: pointer;
+  transition: background 0.3s;
+}
+
+.drop-area:hover {
+  background: #2c2c2c;
 }
 
 .upload-label {
-  color: #fff;
+  color: #ff4eb1;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .controls {
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
 .controls label {
-  margin: 0 10px;
-  display: inline-block;
-  color: #ccc;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
 }
 
 .controls input,
 .controls select,
-.controls button,
-#svgInput,
-#colorPicker,
-#customCss,
-#downloadSVGBtn {
-  padding: 8px;
-  margin: 5px;
+.controls textarea {
+  padding: 6px;
+  font-size: 14px;
   border-radius: 5px;
   border: none;
-  font-size: 14px;
+  margin-top: 5px;
 }
 
-.controls button,
-#downloadSVGBtn {
-  background-color: #ff4da6;
-  color: white;
+.button-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+button {
+  padding: 10px 16px;
+  background: #ff4eb1;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
   cursor: pointer;
+  transition: background 0.3s;
 }
 
-.controls button:hover,
-#downloadSVGBtn:hover {
-  background-color: #e60073;
+button:hover {
+  background: #e03e9b;
 }
 
-#preview {
+.preview-grid {
   display: flex;
   flex-wrap: wrap;
+  gap: 10px;
   justify-content: center;
-  gap: 20px;
+  margin-bottom: 30px;
 }
 
 .preview-img {
   max-width: 200px;
-  border: 2px solid #ff4da6;
-  border-radius: 8px;
-  cursor: pointer;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid #444;
+  object-fit: cover;
 }
 
-#svgTools {
-  margin-top: 30px;
-  background: #1a1a1a;
+.svg-controls {
+  background: #2a2a2a;
+  border-radius: 10px;
   padding: 20px;
-  border: 1px solid #555;
-  border-radius: 8px;
-}
-
-#svgPreview {
   margin-top: 20px;
-  background: #fff;
-  padding: 10px;
-  border-radius: 8px;
-  min-height: 200px;
 }
 
-#customCss {
+.svg-controls.hidden {
+  display: none;
+}
+
+.svg-controls label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.svg-controls input,
+.svg-controls select,
+.svg-controls textarea {
   width: 100%;
-  height: 100px;
-  background: #333;
-  color: #fff;
-  border: 1px solid #666;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: none;
+  margin-top: 5px;
+  background: #fff;
+  color: #000;
+}
+
+.svg-preview-section {
+  margin-top: 20px;
+}
+
+#svgPreviewContainer {
   margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 10px;
+  min-height: 150px;
+  overflow: auto;
+  color: #000;
 }
