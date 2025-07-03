@@ -1,7 +1,7 @@
-import { textToSVG } from "./utils/svgConverter.js";
-
+// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 let filesToProcess = [];
+let svgPanelOpen = false;
 
 // Elements
 const fileInput = document.getElementById("fileInput");
@@ -10,16 +10,13 @@ const downloadAllBtn = document.getElementById("downloadAllBtn");
 const textToSVGBtn = document.getElementById("textToSVGBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
-
-// SVG Controls
-const svgEditor = document.getElementById("svgEditor");
+const svgPanel = document.getElementById("svgPanel");
+const svgOutput = document.getElementById("svgOutput");
+const svgCSSInput = document.getElementById("svgCSS");
 const svgTextInput = document.getElementById("svgText");
-const svgFont = document.getElementById("svgFont");
-const svgColor = document.getElementById("svgColor");
-const svgCSS = document.getElementById("svgCSS");
-const svgPreviewContainer = document.getElementById("svgPreviewContainer");
-const applySVGStyleBtn = document.getElementById("applySVGStyleBtn");
-const downloadSVG = document.getElementById("downloadSVG");
+const svgFontInput = document.getElementById("svgFont");
+const svgColorInput = document.getElementById("svgColor");
+const svgDownloadBtn = document.getElementById("svgDownloadBtn");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
@@ -28,33 +25,60 @@ downloadAllBtn.addEventListener("click", downloadAll);
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  handleFiles({ target: { files: e.dataTransfer.files } });
+  const files = Array.from(e.dataTransfer.files);
+  handleNewFiles(files);
 });
+
 dropArea.addEventListener("click", () => fileInput.click());
 
 textToSVGBtn.addEventListener("click", () => {
-  svgEditor.style.display = "block";
-  updateSVGPreview();
+  svgPanelOpen = !svgPanelOpen;
+  svgPanel.style.display = svgPanelOpen ? "block" : "none";
 });
 
-applySVGStyleBtn.addEventListener("click", updateSVGPreview);
+svgCSSInput.addEventListener("input", updateSVGPreview);
+svgTextInput.addEventListener("input", updateSVGPreview);
+svgFontInput.addEventListener("input", updateSVGPreview);
+svgColorInput.addEventListener("input", updateSVGPreview);
 
-downloadSVG.addEventListener("click", () => {
-  const svgData = textToSVG(svgTextInput.value, svgFont.value, svgColor.value, svgCSS.value);
+svgDownloadBtn.addEventListener("click", () => {
+  const svgData = textToSVG(
+    svgTextInput.value,
+    svgFontInput.value,
+    svgColorInput.value,
+    svgCSSInput.value
+  );
   const blob = new Blob([svgData], { type: "image/svg+xml" });
   saveAs(blob, "label.svg");
 });
 
+function updateSVGPreview() {
+  const svgData = textToSVG(
+    svgTextInput.value,
+    svgFontInput.value,
+    svgColorInput.value,
+    svgCSSInput.value
+  );
+  svgOutput.innerHTML = svgData;
+}
+
 function handleFiles(event) {
-  filesToProcess = Array.from(event.target.files);
+  handleNewFiles(Array.from(event.target.files));
+}
+
+function handleNewFiles(newFiles) {
+  if (filesToProcess.length > 0) {
+    const addMore = confirm("Start a new batch or add to existing?");
+    if (!addMore) return;
+  }
+  filesToProcess = [...filesToProcess, ...newFiles];
   preview.innerHTML = "";
-  filesToProcess.forEach((file, i) => {
+  filesToProcess.forEach(file => {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = () => {
       const img = document.createElement("img");
-      img.src = e.target.result;
+      img.src = reader.result;
       img.className = "preview-img";
-      img.title = file.name;
       preview.appendChild(img);
     };
     reader.readAsDataURL(file);
@@ -64,15 +88,13 @@ function handleFiles(event) {
 async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const keepAspectRatio = document.getElementById("keepAspectRatio").checked;
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-
   processedBlobs = [];
-  preview.innerHTML = "";
 
   for (const file of filesToProcess) {
-    const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize, keepAspectRatio);
+    const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+    if (!blob) continue;
     const img = document.createElement("img");
     img.src = previewURL;
     img.alt = name;
@@ -83,8 +105,10 @@ async function processImages() {
 }
 
 function downloadAll() {
-  if (!processedBlobs.length) return alert("No images processed.");
-
+  if (!processedBlobs.length) {
+    alert("No processed images to download.");
+    return;
+  }
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
@@ -100,9 +124,4 @@ function downloadAll() {
       saveAs(blob, name);
     });
   }
-}
-
-function updateSVGPreview() {
-  const svgData = textToSVG(svgTextInput.value, svgFont.value, svgColor.value, svgCSS.value);
-  svgPreviewContainer.innerHTML = svgData;
 }
