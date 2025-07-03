@@ -1,36 +1,38 @@
-async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
+// utils/imageProcessor.js
+
+async function compressImage(file, format, maxWidth, maxHeight, targetSize, keepAspectRatio = true, qualityOverride = null) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  // Scale image to max width/height while preserving aspect ratio
-  let scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
-  const scaledWidth = Math.round(img.width * scale);
-  const scaledHeight = Math.round(img.height * scale);
+  let targetW = maxWidth;
+  let targetH = maxHeight;
 
-  canvas.width = scaledWidth;
-  canvas.height = scaledHeight;
-  ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+  if (keepAspectRatio) {
+    const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+    targetW = Math.round(img.width * scale);
+    targetH = Math.round(img.height * scale);
+  }
 
-  let quality = 0.95;
+  canvas.width = targetW;
+  canvas.height = targetH;
+  ctx.drawImage(img, 0, 0, targetW, targetH);
+
+  let quality = qualityOverride ?? 0.95;
   let blob;
 
-  // Try compressing repeatedly until under target size or minimum quality
+  // Loop to compress until under size or min quality
   do {
-    blob = await new Promise(res => {
-      canvas.toBlob(res, `image/${format}`, quality);
-    });
-
+    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
     if (!blob) {
-      alert(`Your browser does not support the "${format}" format for compression.`);
+      alert(`Your browser may not support the ${format.toUpperCase()} format.`);
       return { blob: null, previewURL: "", name: file.name };
     }
-
     quality -= 0.05;
   } while (blob.size > targetSize && quality > 0.05);
 
   const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name };
+  return { blob, previewURL, name: file.name, original: img };
 }
 
 function loadImageFromFile(file) {
@@ -45,22 +47,4 @@ function loadImageFromFile(file) {
   });
 }
 
-function downloadAll(processedBlobs) {
-  if (!processedBlobs.length) {
-    alert("No processed images to download.");
-    return;
-  }
-
-  const zip = new JSZip();
-
-  processedBlobs.forEach(({ blob, name }) => {
-    if (!blob) return;
-    const extension = name.split(".").pop();
-    const baseName = name.replace(/\.[^/.]+$/, "");
-    zip.file(`${baseName}.${extension}`, blob);
-  });
-
-  zip.generateAsync({ type: "blob" }).then(content => {
-    saveAs(content, "optimizeprime_images.zip");
-  });
-}
+export { compressImage };
