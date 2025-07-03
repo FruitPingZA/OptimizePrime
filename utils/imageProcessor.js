@@ -1,32 +1,32 @@
-async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
+async function compressImage(file, format, maxWidth, maxHeight, targetSize, keepAspect = true) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  let scale = 1;
-  if (maxWidth && maxHeight) {
-    scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
-  } else if (maxWidth) {
-    scale = Math.min(maxWidth / img.width, 1);
-  } else if (maxHeight) {
-    scale = Math.min(maxHeight / img.height, 1);
+  let width = maxWidth;
+  let height = maxHeight;
+
+  if (keepAspect) {
+    const ratio = img.width / img.height;
+    if (img.width > img.height) {
+      width = Math.min(maxWidth, img.width);
+      height = Math.round(width / ratio);
+    } else {
+      height = Math.min(maxHeight, img.height);
+      width = Math.round(height * ratio);
+    }
   }
 
-  const scaledWidth = Math.round(img.width * scale);
-  const scaledHeight = Math.round(img.height * scale);
-
-  canvas.width = scaledWidth;
-  canvas.height = scaledHeight;
-  ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+  canvas.width = width;
+  canvas.height = height;
+  ctx.drawImage(img, 0, 0, width, height);
 
   let quality = 0.95;
   let blob;
 
-  const mimeType = format === "avif" ? "image/avif" : `image/${format}`;
-
   do {
-    blob = await new Promise(res => {
-      canvas.toBlob(res, mimeType, quality);
+    blob = await new Promise((res) => {
+      canvas.toBlob(res, `image/${format}`, quality);
     });
 
     if (!blob) {
@@ -35,14 +35,14 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
     }
 
     quality -= 0.05;
-  } while (blob.size > targetSize && quality > 0.1);
+  } while (blob.size > targetSize && quality > 0.05);
 
   const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name };
+  return { blob, previewURL, name: file.name, originalWidth: img.width, originalHeight: img.height, compressedWidth: width, compressedHeight: height };
 }
 
 function loadImageFromFile(file) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
