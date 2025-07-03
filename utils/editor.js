@@ -1,19 +1,42 @@
-function adjustBrightness(ctx, width, height, value = 1.0) {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    imageData.data[i] *= value;
-    imageData.data[i + 1] *= value;
-    imageData.data[i + 2] *= value;
-  }
-  ctx.putImageData(imageData, 0, 0);
-}
+// utils/editor.js
 
-function cropToSquare(ctx, canvas, originalWidth, originalHeight) {
-  const size = Math.min(originalWidth, originalHeight);
-  const offsetX = (originalWidth - size) / 2;
-  const offsetY = (originalHeight - size) / 2;
-  const cropped = ctx.getImageData(offsetX, offsetY, size, size);
-  canvas.width = size;
-  canvas.height = size;
-  ctx.putImageData(cropped, 0, 0);
+import { textToSVG, applyCustomCSSToSVG } from "./svgConverter.js";
+
+export function setupSVGEditor() {
+  const editorSection = document.getElementById("svgEditorSection");
+  const svgOutput = document.getElementById("svgOutput");
+  const cssInput = document.getElementById("svgCSSInput");
+  const fontInput = document.getElementById("svgFontInput");
+  const colorInput = document.getElementById("svgColorInput");
+  const textInput = document.getElementById("svgTextInput");
+  const downloadBtn = document.getElementById("svgDownloadBtn");
+
+  if (!editorSection) return;
+
+  function updateSVGPreview() {
+    const text = textInput.value;
+    const font = fontInput.value;
+    const color = colorInput.value;
+    const css = cssInput.value;
+
+    let svgContent = textToSVG(text, font, color);
+    svgContent = applyCustomCSSToSVG(svgContent, css);
+    svgOutput.innerHTML = svgContent;
+  }
+
+  // Update SVG preview on any input
+  [textInput, fontInput, colorInput, cssInput].forEach(input => {
+    input.addEventListener("input", updateSVGPreview);
+  });
+
+  downloadBtn.addEventListener("click", () => {
+    const blob = new Blob([svgOutput.innerHTML], { type: "image/svg+xml" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "custom.svg";
+    link.click();
+  });
+
+  // Initial preview
+  updateSVGPreview();
 }
