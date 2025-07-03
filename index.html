@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>OptimizePrime</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <h1>OptimizePrime</h1>
+
     <div class="drop-area" id="dropArea">
       <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
     </div>
 
     <div class="controls">
       <label>Max Width:
-        <input type="number" id="maxWidth" value="800" />
+        <input type="number" id="maxWidth" value="800">
       </label>
       <label>Max Height:
-        <input type="number" id="maxHeight" value="800" />
+        <input type="number" id="maxHeight" value="800">
+      </label>
+      <label>Maintain Aspect Ratio:
+        <input type="checkbox" id="keepAspectRatio" checked>
       </label>
       <label>Format:
         <select id="format">
@@ -27,25 +31,40 @@
         </select>
       </label>
       <label>Target Size (KB):
-        <input type="number" id="targetSize" value="200" />
+        <input type="number" id="targetSize" value="200">
       </label>
-      <br />
+      <br>
       <button id="processBtn">Compress</button>
       <button id="downloadAllBtn">Download All</button>
       <button id="textToSVGBtn">Text to SVG</button>
     </div>
 
     <div id="preview"></div>
+
+    <div id="svgEditor" style="display: none;">
+      <h3>SVG Editor</h3>
+      <label>Text:
+        <input type="text" id="svgText" value="Sample Text">
+      </label>
+      <label>Font:
+        <input type="text" id="svgFont" value="Arial">
+      </label>
+      <label>Color:
+        <input type="color" id="svgColor" value="#000000">
+      </label>
+      <br>
+      <label>Custom CSS:
+        <textarea id="svgCSS" rows="4" cols="50"></textarea>
+      </label>
+      <br>
+      <button id="applySVGStyleBtn">Apply CSS</button>
+      <button id="downloadSVG">Download SVG</button>
+      <div id="svgPreviewContainer"></div>
+    </div>
   </div>
 
-  <!-- Load from CDN to ensure working on GitHub Pages -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-  <!-- Your scripts -->
-  <script src="utils/imageProcessor.js"></script>
-  <script src="utils/editor.js"></script>
-  <script src="utils/svgConverter.js"></script>
-  <script src="script.js"></script>
+  <script src="lib/jszip.min.js"></script>
+  <script src="lib/FileSaver.min.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
