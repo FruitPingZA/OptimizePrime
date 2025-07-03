@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>OptimizePrime</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -12,45 +11,44 @@
 
     <div class="drop-area" id="dropArea">
       <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
     </div>
 
     <div class="controls">
-      <label>Max Width: <input type="number" id="maxWidth" placeholder="e.g. 800" /></label>
-      <label>Max Height: <input type="number" id="maxHeight" placeholder="e.g. 800" /></label>
-      <label>Format:
+      <label>Width: <input type="number" id="maxWidth" value="800"></label>
+      <label>Height: <input type="number" id="maxHeight" value="800"></label>
+      <label>
+        Format:
         <select id="format">
           <option value="webp">WebP</option>
           <option value="avif">AVIF</option>
         </select>
       </label>
-      <label>Target Size (KB): <input type="number" id="targetSize" value="200" /></label>
+      <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
+      <br>
       <button id="processBtn">Compress</button>
       <button id="downloadAllBtn">Download All</button>
-      <button id="textToSVGBtn">Text to SVG</button>
     </div>
 
-    <div id="preview" class="preview"></div>
+    <div id="preview"></div>
 
-    <div id="svgEditorSection" class="svg-editor hidden">
-      <h3>SVG Customizer</h3>
-      <label>Text: <input type="text" id="svgTextInput" placeholder="Your label" /></label>
-      <label>Font: <input type="text" id="svgFontInput" placeholder="Arial" /></label>
-      <label>Color: <input type="color" id="svgColorInput" value="#000000" /></label>
-      <label>Custom CSS:</label>
-      <textarea id="svgCSSInput" placeholder="Type custom CSS here..."></textarea>
-      <div class="svg-output-wrapper">
-        <div id="svgOutput"></div>
-      </div>
-      <button id="svgDownloadBtn">Download SVG</button>
+    <!-- SVG Tools -->
+    <div id="svgTools" style="display:none;">
+      <h2>Text to SVG Editor</h2>
+      <input type="text" id="svgInput" placeholder="Enter text...">
+      <select id="fontSelect"></select>
+      <input type="color" id="colorPicker">
+      <textarea id="customCss" placeholder="Enter custom CSS..."></textarea>
+      <button id="downloadSVGBtn">Download SVG</button>
+      <div id="svgPreview"></div>
     </div>
   </div>
 
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
   <script src="utils/imageProcessor.js"></script>
-  <script src="utils/svgConverter.js"></script>
   <script src="utils/editor.js"></script>
+  <script src="utils/svgConverter.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
