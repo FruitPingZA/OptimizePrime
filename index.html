@@ -8,7 +8,6 @@
 <body>
   <div class="container">
     <h1>OptimizePrime</h1>
-
     <div class="drop-area" id="dropArea">
       <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
       <input type="file" id="fileInput" accept="image/*" multiple hidden>
@@ -21,7 +20,7 @@
       <label>Max Height:
         <input type="number" id="maxHeight" value="800">
       </label>
-      <label>Maintain Aspect Ratio:
+      <label>Keep Aspect Ratio:
         <input type="checkbox" id="keepAspectRatio" checked>
       </label>
       <label>Format:
@@ -41,30 +40,26 @@
 
     <div id="preview"></div>
 
-    <div id="svgEditor" style="display: none;">
-      <h3>SVG Editor</h3>
-      <label>Text:
-        <input type="text" id="svgText" value="Sample Text">
-      </label>
-      <label>Font:
-        <input type="text" id="svgFont" value="Arial">
-      </label>
-      <label>Color:
-        <input type="color" id="svgColor" value="#000000">
-      </label>
-      <br>
-      <label>Custom CSS:
-        <textarea id="svgCSS" rows="4" cols="50"></textarea>
-      </label>
-      <br>
-      <button id="applySVGStyleBtn">Apply CSS</button>
-      <button id="downloadSVG">Download SVG</button>
-      <div id="svgPreviewContainer"></div>
+    <div id="svgEditor" style="display:none;">
+      <h2>SVG Editor</h2>
+      <label>Text: <input type="text" id="svgTextInput"></label>
+      <label>Font: <input type="text" id="svgFontInput" value="Arial"></label>
+      <label>Color: <input type="color" id="svgColorInput" value="#000000"></label>
+      <label>Custom CSS:</label>
+      <textarea id="svgCSSInput" rows="5" placeholder="Add custom CSS here..."></textarea>
+      <div class="svg-preview">
+        <h3>Live Preview</h3>
+        <div id="svgLivePreview" class="svg-container"></div>
+      </div>
+      <button id="svgDownloadBtn">Download SVG</button>
     </div>
   </div>
 
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
-  <script type="module" src="script.js"></script>
+  <script src="utils/imageProcessor.js"></script>
+  <script src="utils/editor.js"></script>
+  <script type="module" src="utils/svgConverter.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
