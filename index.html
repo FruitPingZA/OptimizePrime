@@ -15,32 +15,58 @@
     </div>
 
     <div class="controls">
-      <label>Width: <input type="number" id="maxWidth" value="800"></label>
-      <label>Height: <input type="number" id="maxHeight" value="800"></label>
-      <label>
-        Format:
+      <label>Max Width:
+        <input type="number" id="maxWidth" value="800">
+      </label>
+      <label>Max Height:
+        <input type="number" id="maxHeight" value="800">
+      </label>
+      <label>Format:
         <select id="format">
           <option value="webp">WebP</option>
           <option value="avif">AVIF</option>
         </select>
       </label>
-      <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
-      <br>
-      <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn">Download All</button>
+      <label>Target Size (KB):
+        <input type="number" id="targetSize" value="200">
+      </label>
+      <div class="button-row">
+        <button id="processBtn">Compress</button>
+        <button id="downloadAllBtn">Download All</button>
+        <button id="svgToggleBtn">SVG</button>
+      </div>
     </div>
 
-    <div id="preview"></div>
+    <div id="preview" class="preview-grid"></div>
 
-    <!-- SVG Tools -->
-    <div id="svgTools" style="display:none;">
-      <h2>Text to SVG Editor</h2>
-      <input type="text" id="svgInput" placeholder="Enter text...">
-      <select id="fontSelect"></select>
-      <input type="color" id="colorPicker">
-      <textarea id="customCss" placeholder="Enter custom CSS..."></textarea>
-      <button id="downloadSVGBtn">Download SVG</button>
-      <div id="svgPreview"></div>
+    <!-- SVG Generator UI -->
+    <div id="svgControls" class="svg-controls hidden">
+      <h2>SVG Generator</h2>
+      <label>Text:
+        <input type="text" id="svgTextInput" placeholder="Enter SVG text">
+      </label>
+      <label>Font:
+        <select id="svgFontSelector">
+          <option value="Arial">Arial</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Impact">Impact</option>
+          <option value="Tahoma">Tahoma</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Verdana">Verdana</option>
+        </select>
+      </label>
+      <label>Color:
+        <input type="color" id="svgColorInput" value="#000000">
+      </label>
+      <label>Custom CSS:
+        <textarea id="customCssInput" placeholder="Enter custom CSS for the SVG here..."></textarea>
+      </label>
+      <div class="svg-preview-section">
+        <h3>Live Preview:</h3>
+        <div id="svgPreviewContainer"></div>
+      </div>
+      <button id="downloadSVG">Download SVG</button>
     </div>
   </div>
 
