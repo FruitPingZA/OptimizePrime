@@ -1,47 +1,46 @@
-// editor.js - Handles individual image editing before compression
+async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
+  const img = await loadImageFromFile(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-export function showImageEditor(imageIndex, imageData, onSave) {
-  const editorOverlay = document.createElement("div");
-  editorOverlay.className = "editor-overlay";
-  editorOverlay.innerHTML = `
-    <div class="editor-modal">
-      <h3>Edit Image Settings</h3>
-      <label>Max Width:
-        <input type="number" id="editWidth" value="${imageData.maxWidth || 800}">
-      </label>
-      <label>Max Height:
-        <input type="number" id="editHeight" value="${imageData.maxHeight || 800}">
-      </label>
-      <label>Target Size (KB):
-        <input type="number" id="editTargetSize" value="${imageData.targetSize || 200}">
-      </label>
-      <label>Format:
-        <select id="editFormat">
-          <option value="webp" ${imageData.format === 'webp' ? 'selected' : ''}>WebP</option>
-          <option value="avif" ${imageData.format === 'avif' ? 'selected' : ''}>AVIF</option>
-        </select>
-      </label>
-      <div class="editor-buttons">
-        <button id="saveImageEdit">Save</button>
-        <button id="cancelImageEdit">Cancel</button>
-      </div>
-    </div>
-  `;
+  // Scale image to max width/height while preserving aspect ratio
+  let scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+  const scaledWidth = Math.round(img.width * scale);
+  const scaledHeight = Math.round(img.height * scale);
 
-  document.body.appendChild(editorOverlay);
+  canvas.width = scaledWidth;
+  canvas.height = scaledHeight;
+  ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
 
-  document.getElementById("cancelImageEdit").onclick = () => {
-    document.body.removeChild(editorOverlay);
-  };
+  let quality = 0.95;
+  let blob;
 
-  document.getElementById("saveImageEdit").onclick = () => {
-    const newData = {
-      maxWidth: parseInt(document.getElementById("editWidth").value),
-      maxHeight: parseInt(document.getElementById("editHeight").value),
-      targetSize: parseInt(document.getElementById("editTargetSize").value),
-      format: document.getElementById("editFormat").value
+  // Try compressing repeatedly until under target size or minimum quality
+  do {
+    blob = await new Promise(res => {
+      canvas.toBlob(res, `image/${format}`, quality);
+    });
+
+    if (!blob) {
+      alert(`Your browser does not support the "${format}" format for compression.`);
+      return { blob: null, previewURL: "", name: file.name };
+    }
+
+    quality -= 0.05;
+  } while (blob.size > targetSize && quality > 0.05);
+
+  const previewURL = URL.createObjectURL(blob);
+  return { blob, previewURL, name: file.name, originalURL: canvas.toDataURL() };
+}
+
+function loadImageFromFile(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.src = reader.result;
     };
-    onSave(imageIndex, newData);
-    document.body.removeChild(editorOverlay);
-  };
+    reader.readAsDataURL(file);
+  });
 }
