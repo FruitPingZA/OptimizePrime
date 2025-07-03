@@ -3,16 +3,17 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  // Maintain aspect ratio
-  const aspectRatio = img.width / img.height;
-  let scaledWidth = maxWidth;
-  let scaledHeight = maxHeight;
-
-  if (img.width > img.height) {
-    scaledHeight = Math.min(maxHeight, Math.round(maxWidth / aspectRatio));
-  } else {
-    scaledWidth = Math.min(maxWidth, Math.round(maxHeight * aspectRatio));
+  let scale = 1;
+  if (maxWidth && maxHeight) {
+    scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+  } else if (maxWidth) {
+    scale = Math.min(maxWidth / img.width, 1);
+  } else if (maxHeight) {
+    scale = Math.min(maxHeight / img.height, 1);
   }
+
+  const scaledWidth = Math.round(img.width * scale);
+  const scaledHeight = Math.round(img.height * scale);
 
   canvas.width = scaledWidth;
   canvas.height = scaledHeight;
@@ -21,9 +22,11 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   let quality = 0.95;
   let blob;
 
+  const mimeType = format === "avif" ? "image/avif" : `image/${format}`;
+
   do {
     blob = await new Promise(res => {
-      canvas.toBlob(res, `image/${format}`, quality);
+      canvas.toBlob(res, mimeType, quality);
     });
 
     if (!blob) {
@@ -32,7 +35,7 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
     }
 
     quality -= 0.05;
-  } while (blob.size > targetSize && quality > 0.05);
+  } while (blob.size > targetSize && quality > 0.1);
 
   const previewURL = URL.createObjectURL(blob);
   return { blob, previewURL, name: file.name };
