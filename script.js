@@ -1,7 +1,3 @@
-import { compressImage } from "./utils/imageProcessor.js";
-import { textToSVG, applyCustomCSSToSVG } from "./utils/svgConverter.js";
-import { setupSVGEditor } from "./utils/editor.js";
-
 let processedBlobs = [];
 let filesToProcess = [];
 
@@ -11,22 +7,18 @@ const downloadAllBtn = document.getElementById("downloadAllBtn");
 const textToSVGBtn = document.getElementById("textToSVGBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
+const widthInput = document.getElementById("maxWidth");
+const heightInput = document.getElementById("maxHeight");
+const formatInput = document.getElementById("format");
+const targetSizeInput = document.getElementById("targetSize");
 const svgEditorSection = document.getElementById("svgEditorSection");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
-dropArea.addEventListener("dragover", e => e.preventDefault());
-dropArea.addEventListener("drop", e => {
-  e.preventDefault();
-  handleFiles({ target: { files: e.dataTransfer.files } });
-});
-
-dropArea.addEventListener("click", () => fileInput.click());
-
 textToSVGBtn.addEventListener("click", () => {
-  if (svgEditorSection.style.display === "none") {
+  if (svgEditorSection.style.display === "none" || !svgEditorSection.style.display) {
     svgEditorSection.style.display = "block";
     setupSVGEditor();
   } else {
@@ -34,48 +26,69 @@ textToSVGBtn.addEventListener("click", () => {
   }
 });
 
+dropArea.addEventListener("dragover", e => {
+  e.preventDefault();
+});
+
+dropArea.addEventListener("drop", e => {
+  e.preventDefault();
+  handleFiles({ target: { files: e.dataTransfer.files } });
+});
+
+dropArea.addEventListener("click", () => {
+  fileInput.click();
+});
+
 function handleFiles(event) {
   const newFiles = Array.from(event.target.files);
-  if (processedBlobs.length > 0) {
-    if (!confirm("Start a new batch? This will clear current images.")) return;
-    processedBlobs = [];
-    preview.innerHTML = "";
-  }
+  if (processedBlobs.length > 0 && !confirm("Start a new batch? This will clear current images.")) return;
 
   filesToProcess = newFiles;
+  processedBlobs = [];
+  preview.innerHTML = "";
+
   filesToProcess.forEach(file => {
-    const img = document.createElement("p");
-    img.textContent = `Ready: ${file.name}`;
-    img.className = "preview-placeholder";
-    preview.appendChild(img);
+    const fileLabel = document.createElement("div");
+    fileLabel.className = "preview-placeholder";
+    fileLabel.textContent = file.name;
+    preview.appendChild(fileLabel);
   });
 }
 
 async function processImages() {
-  const maxWidth = parseInt(document.getElementById("maxWidth").value);
-  const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value;
-  const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
+  const width = parseInt(widthInput.value) || null;
+  const height = parseInt(heightInput.value) || null;
+  const format = formatInput.value;
+  const targetSize = parseInt(targetSizeInput.value) * 1024;
 
   processedBlobs = [];
   preview.innerHTML = "";
 
   for (const file of filesToProcess) {
-    const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+    const { blob, previewURL, name } = await compressImage(file, format, width, height, targetSize);
     if (!blob) continue;
+
+    const imgContainer = document.createElement("div");
+    imgContainer.className = "img-container";
 
     const img = document.createElement("img");
     img.src = previewURL;
     img.alt = name;
     img.className = "preview-img";
-    preview.appendChild(img);
+
+    const label = document.createElement("p");
+    label.textContent = name;
+
+    imgContainer.appendChild(img);
+    imgContainer.appendChild(label);
+    preview.appendChild(imgContainer);
 
     processedBlobs.push({ blob, name });
   }
 }
 
 function downloadAll() {
-  if (processedBlobs.length === 0) {
+  if (!processedBlobs.length) {
     alert("No processed images to download.");
     return;
   }
@@ -93,9 +106,11 @@ function downloadAll() {
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
+      const ext = name.split(".").pop();
+      const base = name.replace(/\.[^/.]+$/, "");
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = name.replace(/\.[^/.]+$/, "") + ".webp";
+      link.download = `${base}.${ext}`;
       link.click();
     });
   }
