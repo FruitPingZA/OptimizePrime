@@ -1,4 +1,4 @@
-// svgConverter.js
+
 
 function generateSVG(text, font, color) {
   return `
