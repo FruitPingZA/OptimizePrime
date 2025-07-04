@@ -7,10 +7,15 @@ const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
+const svgBtn = document.getElementById("svgToggleBtn");
+const svgSection = document.getElementById("svgSection");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
+svgBtn.addEventListener("click", () => {
+  svgSection.classList.toggle("hidden");
+});
 
 // Prevent default browser behavior for drag and drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
