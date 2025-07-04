@@ -1,46 +1,56 @@
-async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
-  const img = await loadImageFromFile(file);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+// editor.js
 
-  // Scale image to max width/height while preserving aspect ratio
-  let scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
-  const scaledWidth = Math.round(img.width * scale);
-  const scaledHeight = Math.round(img.height * scale);
+const fontSelector = document.getElementById("fontSelector");
+const colorPicker = document.getElementById("colorPicker");
+const svgTextInput = document.getElementById("svgText");
+const cssEditor = document.getElementById("customCSS");
+const svgPreview = document.getElementById("svgPreview");
+const downloadSVGBtn = document.getElementById("downloadSVGBtn");
 
-  canvas.width = scaledWidth;
-  canvas.height = scaledHeight;
-  ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+const defaultFonts = [
+  "Arial", "Verdana", "Times New Roman", "Georgia", "Courier New", "Comic Sans MS",
+  "Tahoma", "Impact", "Trebuchet MS", "Lucida Console"
+];
 
-  let quality = 0.95;
-  let blob;
-
-  // Try compressing repeatedly until under target size or minimum quality
-  do {
-    blob = await new Promise(res => {
-      canvas.toBlob(res, `image/${format}`, quality);
-    });
-
-    if (!blob) {
-      alert(`Your browser does not support the "${format}" format for compression.`);
-      return { blob: null, previewURL: "", name: file.name };
-    }
-
-    quality -= 0.05;
-  } while (blob.size > targetSize && quality > 0.05);
-
-  const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name };
-}
-
-function loadImageFromFile(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
+function populateFontSelector() {
+  fontSelector.innerHTML = "";
+  defaultFonts.forEach(font => {
+    const option = document.createElement("option");
+    option.value = font;
+    option.textContent = font;
+    fontSelector.appendChild(option);
   });
 }
+
+function renderSVG() {
+  const text = svgTextInput.value;
+  const font = fontSelector.value;
+  const color = colorPicker.value;
+  const css = cssEditor.value;
+
+  const svgContent = `
+<svg xmlns='http://www.w3.org/2000/svg' width='500' height='200'>
+  <style>
+    text { font-family: ${font}; fill: ${color}; font-size: 32px; }
+    ${css}
+  </style>
+  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'>${text}</text>
+</svg>`;
+
+  svgPreview.innerHTML = svgContent;
+  return svgContent;
+}
+
+svgTextInput.addEventListener("input", renderSVG);
+fontSelector.addEventListener("change", renderSVG);
+colorPicker.addEventListener("change", renderSVG);
+cssEditor.addEventListener("input", renderSVG);
+downloadSVGBtn.addEventListener("click", () => {
+  const svg = renderSVG();
+  const blob = new Blob([svg], { type: "image/svg+xml" });
+  saveAs(blob, "label.svg");
+});
+
+// Populate fonts and render on load
+populateFontSelector();
+renderSVG();
