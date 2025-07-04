@@ -1,21 +1,16 @@
-async function compressImage(file, format, maxWidth, maxHeight, targetSize, keepAspect = true) {
+async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  let width = maxWidth;
-  let height = maxHeight;
-
-  if (keepAspect) {
-    const ratio = img.width / img.height;
-    if (img.width > img.height) {
-      width = Math.min(maxWidth, img.width);
-      height = Math.round(width / ratio);
-    } else {
-      height = Math.min(maxHeight, img.height);
-      width = Math.round(height * ratio);
-    }
-  }
+  // Maintain aspect ratio unless dimensions are overridden
+  const scale = Math.min(
+    maxWidth / img.width || 1,
+    maxHeight / img.height || 1,
+    1
+  );
+  const width = Math.round(img.width * scale);
+  const height = Math.round(img.height * scale);
 
   canvas.width = width;
   canvas.height = height;
@@ -24,21 +19,16 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize, keep
   let quality = 0.95;
   let blob;
 
+  // Keep compressing until it's below target size or minimum quality hit
   do {
-    blob = await new Promise((res) => {
-      canvas.toBlob(res, `image/${format}`, quality);
-    });
-
-    if (!blob) {
-      alert(`Your browser does not support the "${format}" format for compression.`);
-      return { blob: null, previewURL: "", name: file.name };
-    }
-
-    quality -= 0.05;
-  } while (blob.size > targetSize && quality > 0.05);
+    blob = await new Promise((res) =>
+      canvas.toBlob(res, `image/${format}`, quality)
+    );
+    quality -= 0.03;
+  } while (blob.size > targetSize && quality > 0.6);
 
   const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name, originalWidth: img.width, originalHeight: img.height, compressedWidth: width, compressedHeight: height };
+  return { blob, previewURL, name: file.name };
 }
 
 function loadImageFromFile(file) {
