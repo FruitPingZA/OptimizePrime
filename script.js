@@ -1,4 +1,3 @@
-// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 let originalPreviews = [];
 
@@ -12,6 +11,7 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
+// Drag and drop events
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -19,61 +19,53 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => fileInput.click());
 
-let filesToProcess = [];
-
 function handleFiles(event) {
-  filesToProcess = Array.from(event.target.files);
-  preview.innerHTML = "";
-  processedBlobs = [];
-  originalPreviews = [];
-
-  filesToProcess.forEach((file, index) => {
+  const files = Array.from(event.target.files);
+  files.forEach((file, index) => {
     const reader = new FileReader();
     reader.onload = e => {
       const container = document.createElement("div");
       container.className = "image-container";
 
-      const originalImg = new Image();
-      originalImg.src = e.target.result;
-      originalImg.className = "preview-img";
+      const img = new Image();
+      img.src = e.target.result;
+      img.className = "preview-img";
 
       const label = document.createElement("p");
-      label.innerText = file.name;
+      label.textContent = file.name;
 
       container.appendChild(label);
-      container.appendChild(originalImg);
+      container.appendChild(img);
       preview.appendChild(container);
 
-      originalPreviews.push({ index, file, element: container });
+      originalPreviews.push({ file, container });
     };
     reader.readAsDataURL(file);
   });
 }
 
 async function processImages() {
+  processedBlobs = [];
+
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-  processedBlobs = [];
 
-  for (const { file, element } of originalPreviews) {
+  for (const { file, container } of originalPreviews) {
     const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
 
-    const compressedImg = new Image();
-    compressedImg.src = previewURL;
-    compressedImg.className = "preview-img compressed";
+    const img = new Image();
+    img.src = previewURL;
+    img.className = "preview-img";
+    container.appendChild(img);
 
-    element.appendChild(compressedImg);
     processedBlobs.push({ blob, name: file.name });
   }
 }
 
 function downloadAll() {
-  if (!processedBlobs.length) {
-    alert("No images to download.");
-    return;
-  }
+  if (!processedBlobs.length) return alert("No images to download.");
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -82,14 +74,16 @@ function downloadAll() {
       const base = name.replace(/\.[^/.]+$/, "");
       zip.file(`${base}.${ext}`, blob);
     });
-    zip.generateAsync({ type: "blob" }).then(content => {
-      saveAs(content, "optimizeprime_images.zip");
+    zip.generateAsync({ type: "blob" }).then(zipBlob => {
+      saveAs(zipBlob, "optimizeprime_images.zip");
+      preview.innerHTML = "";
+      processedBlobs = [];
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
-      const extension = name.split(".").pop();
-      const baseName = name.replace(/\.[^/.]+$/, "");
-      saveAs(blob, `${baseName}.${extension}`);
+      saveAs(blob, name);
     });
+    preview.innerHTML = "";
+    processedBlobs = [];
   }
 }
