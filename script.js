@@ -1,3 +1,4 @@
+// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 let originalPreviews = [];
 
@@ -61,7 +62,7 @@ async function processImages() {
 
     const compressedImg = new Image();
     compressedImg.src = previewURL;
-    compressedImg.className = "preview-img";
+    compressedImg.className = "preview-img compressed";
 
     element.appendChild(compressedImg);
     processedBlobs.push({ blob, name: file.name });
@@ -69,7 +70,10 @@ async function processImages() {
 }
 
 function downloadAll() {
-  if (!processedBlobs.length) return alert("No images to download.");
+  if (!processedBlobs.length) {
+    alert("No images to download.");
+    return;
+  }
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -78,12 +82,14 @@ function downloadAll() {
       const base = name.replace(/\.[^/.]+$/, "");
       zip.file(`${base}.${ext}`, blob);
     });
-    zip.generateAsync({ type: "blob" }).then(zipBlob => {
-      saveAs(zipBlob, "optimizeprime_images.zip");
+    zip.generateAsync({ type: "blob" }).then(content => {
+      saveAs(content, "optimizeprime_images.zip");
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
-      saveAs(blob, name);
+      const extension = name.split(".").pop();
+      const baseName = name.replace(/\.[^/.]+$/, "");
+      saveAs(blob, `${baseName}.${extension}`);
     });
   }
 }
