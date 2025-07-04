@@ -1,3 +1,4 @@
+// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 let originalPreviews = [];
 
@@ -11,6 +12,7 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
+// Prevent default browser behavior for drag and drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -69,7 +71,10 @@ async function processImages() {
 }
 
 function downloadAll() {
-  if (!processedBlobs.length) return alert("No images to download.");
+  if (!processedBlobs.length) {
+    alert("No images to download.");
+    return;
+  }
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -83,9 +88,15 @@ function downloadAll() {
       preview.innerHTML = "";
     });
   } else {
+    let completed = 0;
     processedBlobs.forEach(({ blob, name }) => {
       saveAs(blob, name);
+      completed++;
+      if (completed === processedBlobs.length) {
+        setTimeout(() => {
+          preview.innerHTML = "";
+        }, 500);
+      }
     });
-    preview.innerHTML = "";
   }
 }
