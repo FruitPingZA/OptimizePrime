@@ -49,6 +49,9 @@ function handleFiles(event) {
     };
     reader.readAsDataURL(file);
   });
+
+  // Reset file input value so the same file can be selected again
+  fileInput.value = "";
 }
 
 async function processImages() {
@@ -85,7 +88,7 @@ function downloadAll() {
     });
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      preview.innerHTML = "";
+      clearPreview();
     });
   } else {
     let completed = 0;
@@ -93,10 +96,15 @@ function downloadAll() {
       saveAs(blob, name);
       completed++;
       if (completed === processedBlobs.length) {
-        setTimeout(() => {
-          preview.innerHTML = "";
-        }, 500);
+        setTimeout(() => clearPreview(), 500);
       }
     });
   }
+}
+
+function clearPreview() {
+  preview.innerHTML = "";
+  processedBlobs = [];
+  originalPreviews = [];
+  filesToProcess = [];
 }
