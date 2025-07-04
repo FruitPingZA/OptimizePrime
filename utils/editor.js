@@ -30,7 +30,7 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   } while (blob.size > targetSize && quality > 0.05);
 
   const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name, originalURL: canvas.toDataURL() };
+  return { blob, previewURL, name: file.name };
 }
 
 function loadImageFromFile(file) {
