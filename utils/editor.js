@@ -1,4 +1,4 @@
-// editor.js
+
 
 const fontSelector = document.getElementById("fontSelector");
 const colorPicker = document.getElementById("colorPicker");
