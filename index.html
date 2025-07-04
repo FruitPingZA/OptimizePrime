@@ -30,47 +30,48 @@
       <label>Target Size (KB):
         <input type="number" id="targetSize" value="200" />
       </label>
-      <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn">Download</button>
-      <button id="toggleSvgBtn">SVG</button>
     </div>
 
-    <div id="preview"></div>
+    <div class="button-bar">
+      <button id="processBtn">Compress</button>
+      <button id="downloadAllBtn">Download</button>
+      <button id="svgToggleBtn">SVG</button>
+    </div>
 
-    <!-- SVG Controls Section (Hidden Initially) -->
-    <div id="svgSection" class="hidden">
-      <h2>SVG Generator</h2>
-      <label>Text:
-        <input type="text" id="svgTextInput" />
-      </label>
+    <div id="preview" class="image-preview"></div>
+
+    <div id="svgSection" class="svg-tools hidden">
+      <h2>SVG Creator</h2>
+      <label>Text: <input type="text" id="svgTextInput" placeholder="Enter text..." /></label>
       <label>Font:
-        <select id="fontSelector">
+        <select id="fontSelect">
           <option value="Arial">Arial</option>
           <option value="Verdana">Verdana</option>
+          <option value="Georgia">Georgia</option>
           <option value="Courier New">Courier New</option>
           <option value="Times New Roman">Times New Roman</option>
-          <option value="Georgia">Georgia</option>
         </select>
       </label>
       <label>Color:
-        <input type="color" id="svgColorInput" value="#000000" />
+        <input type="color" id="svgColor" value="#000000" />
       </label>
-      <button id="generateSvgBtn">Generate SVG</button>
-
-      <div class="svg-preview-area">
-        <textarea id="svgCssInput" placeholder="Enter custom CSS here..."></textarea>
-        <div id="svgOutput" class="svg-preview-box"></div>
-      </div>
-
-      <button id="downloadSvgBtn">Download SVG</button>
+      <label>Custom CSS:</label>
+      <textarea id="svgCSS" placeholder="Enter additional CSS here..."></textarea>
+      <div id="svgPreview" class="svg-preview"></div>
+      <button id="svgDownloadBtn">Download SVG</button>
     </div>
   </div>
 
+  <!-- Libraries -->
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
+
+  <!-- Utilities -->
   <script src="utils/imageProcessor.js"></script>
   <script src="utils/editor.js"></script>
   <script src="utils/svgConverter.js"></script>
+
+  <!-- Main Logic -->
   <script src="script.js"></script>
 </body>
 </html>
