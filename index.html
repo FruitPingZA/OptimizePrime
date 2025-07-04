@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OptimizePrime</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -17,10 +16,10 @@
 
     <div class="controls">
       <label>Max Width:
-        <input type="number" id="maxWidth" value="800">
+        <input type="number" id="maxWidth" value="800" />
       </label>
       <label>Max Height:
-        <input type="number" id="maxHeight" value="800">
+        <input type="number" id="maxHeight" value="800" />
       </label>
       <label>Format:
         <select id="format">
@@ -29,45 +28,49 @@
         </select>
       </label>
       <label>Target Size (KB):
-        <input type="number" id="targetSize" value="200">
+        <input type="number" id="targetSize" value="200" />
       </label>
-      <br />
       <button id="processBtn">Compress</button>
       <button id="downloadAllBtn">Download</button>
-      <button id="toggleSVGBtn">SVG</button>
+      <button id="toggleSvgBtn">SVG</button>
     </div>
 
     <div id="preview"></div>
 
-    <!-- SVG Options Panel -->
-    <div id="svgOptionsPanel" class="hidden">
-      <div class="svg-options">
-        <label>Text: <input type="text" id="svgText" value="Sample Text" /></label>
-        <label>Font:
-          <select id="svgFont">
-            <option value="Arial">Arial</option>
-            <option value="Verdana">Verdana</option>
-            <option value="Georgia">Georgia</option>
-            <option value="Courier New">Courier New</option>
-          </select>
-        </label>
-        <label>Color: <input type="color" id="svgColor" value="#000000" /></label>
-        <textarea id="svgCustomCSS" placeholder="Custom CSS for SVG..."></textarea>
-        <button id="downloadSVG">Download SVG</button>
+    <!-- SVG Controls Section (Hidden Initially) -->
+    <div id="svgSection" class="hidden">
+      <h2>SVG Generator</h2>
+      <label>Text:
+        <input type="text" id="svgTextInput" />
+      </label>
+      <label>Font:
+        <select id="fontSelector">
+          <option value="Arial">Arial</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Georgia">Georgia</option>
+        </select>
+      </label>
+      <label>Color:
+        <input type="color" id="svgColorInput" value="#000000" />
+      </label>
+      <button id="generateSvgBtn">Generate SVG</button>
+
+      <div class="svg-preview-area">
+        <textarea id="svgCssInput" placeholder="Enter custom CSS here..."></textarea>
+        <div id="svgOutput" class="svg-preview-box"></div>
       </div>
-      <div class="svg-preview-panel">
-        <h3>SVG Preview</h3>
-        <div id="svgPreviewContainer"></div>
-      </div>
+
+      <button id="downloadSvgBtn">Download SVG</button>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
   <script src="utils/imageProcessor.js"></script>
-  <script src="utils/svgConverter.js"></script>
   <script src="utils/editor.js"></script>
+  <script src="utils/svgConverter.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
