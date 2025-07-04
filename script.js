@@ -1,4 +1,3 @@
-// Ensure FileSaver.js and JSZip are loaded before this file
 let processedBlobs = [];
 let originalPreviews = [];
 
@@ -7,40 +6,17 @@ const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
-const svgBtn = document.getElementById("svgToggleBtn");
-const svgSection = document.getElementById("svgSection");
-const svgInput = document.getElementById("svgTextInput");
-const svgPreview = document.getElementById("svgPreview");
-const svgCSS = document.getElementById("svgCSS");
-const svgDownloadBtn = document.getElementById("svgDownloadBtn");
-const fontSelect = document.getElementById("fontSelect");
-const colorPicker = document.getElementById("svgColor");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
-svgBtn.addEventListener("click", () => {
-  svgSection.classList.toggle("hidden");
-  updateSVG();
-});
 
-// Prevent default browser behavior for drag and drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
 dropArea.addEventListener("click", () => fileInput.click());
-
-svgInput.addEventListener("input", updateSVG);
-fontSelect.addEventListener("change", updateSVG);
-colorPicker.addEventListener("input", updateSVG);
-svgCSS.addEventListener("input", updateSVG);
-
-svgDownloadBtn.addEventListener("click", () => {
-  const blob = new Blob([svgPreview.innerHTML], { type: "image/svg+xml" });
-  saveAs(blob, "label.svg");
-});
 
 let filesToProcess = [];
 
@@ -85,7 +61,7 @@ async function processImages() {
 
     const compressedImg = new Image();
     compressedImg.src = previewURL;
-    compressedImg.className = "preview-img compressed";
+    compressedImg.className = "preview-img";
 
     element.appendChild(compressedImg);
     processedBlobs.push({ blob, name: file.name });
@@ -110,26 +86,4 @@ function downloadAll() {
       saveAs(blob, name);
     });
   }
-}
-
-function updateSVG() {
-  const text = svgInput.value || "Sample Text";
-  const font = fontSelect.value;
-  const color = colorPicker.value;
-  const css = svgCSS.value;
-
-  const svgContent = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-      <style>
-        text {
-          font-family: ${font};
-          fill: ${color};
-        }
-        ${css}
-      </style>
-      <text x="10" y="50" font-size="40">${text}</text>
-    </svg>
-  `;
-
-  svgPreview.innerHTML = svgContent;
 }
