@@ -1,143 +1,133 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f9f9f9;
   margin: 0;
-  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #1c1c1e;
+  color: #f1f1f1;
 }
 
 .container {
-  max-width: 1000px;
-  margin: 0 auto;
+  max-width: 960px;
+  margin: auto;
   padding: 20px;
-  text-align: center;
 }
 
 h1 {
-  color: #d03b87;
+  text-align: center;
+  color: #ff4fa2;
   margin-bottom: 20px;
 }
 
 .drop-area {
-  border: 2px dashed #d03b87;
+  border: 2px dashed #ff4fa2;
+  border-radius: 12px;
   padding: 30px;
-  border-radius: 10px;
-  background: #fff;
+  text-align: center;
   cursor: pointer;
   margin-bottom: 20px;
 }
 
 .upload-label {
-  color: #d03b87;
+  color: #ff4fa2;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 20px;
 }
 
 .controls label {
-  margin: 10px;
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: #ccc;
 }
 
 .controls input,
 .controls select {
   padding: 6px;
-  margin-left: 5px;
+  margin-top: 4px;
+  border-radius: 6px;
+  border: none;
 }
 
 button {
-  background-color: #d03b87;
+  background-color: #ff4fa2;
   color: white;
   border: none;
-  padding: 10px 20px;
-  margin: 8px 4px;
-  border-radius: 5px;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background 0.3s;
 }
 
 button:hover {
-  background-color: #a62c6f;
-}
-
-#preview {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.image-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background-color: #e03e91;
 }
 
 .preview-img {
-  max-width: 150px;
+  max-width: 100%;
+  height: auto;
+  margin-top: 10px;
   border-radius: 6px;
-  margin-top: 5px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  border: 1px solid #444;
 }
 
-.preview-img.compressed {
-  border: 2px solid #4CAF50;
+.image-container {
+  margin-bottom: 30px;
+  text-align: center;
 }
 
-/* SVG Panel Styling */
-#svgOptionsPanel {
-  margin-top: 40px;
-  padding: 20px;
-  background: #fff;
-  border: 2px dashed #d03b87;
-  border-radius: 10px;
-}
-
-#svgOptionsPanel.hidden {
+#svgSection.hidden {
   display: none;
 }
 
-.svg-options {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
+#svgSection {
+  border-top: 2px solid #555;
+  padding-top: 20px;
+  margin-top: 30px;
 }
 
-.svg-options input[type="text"],
-.svg-options select,
-.svg-options input[type="color"] {
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-#svgCustomCSS {
+#svgTextInput,
+#svgCssInput,
+#svgOutput,
+#fontSelector,
+#svgColorInput {
   width: 100%;
-  max-width: 500px;
-  min-height: 80px;
   padding: 10px;
+  border-radius: 6px;
+  border: none;
   margin-top: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  font-size: 14px;
+}
+
+#svgCssInput {
+  height: 120px;
   font-family: monospace;
+  background: #2c2c2e;
+  color: #fff;
+  resize: vertical;
 }
 
-.svg-preview-panel {
+.svg-preview-area {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  gap: 20px;
+  margin-top: 20px;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
-#svgPreviewContainer {
-  margin-top: 10px;
-  padding: 15px;
-  background: #f4f4f4;
-  border: 1px solid #ccc;
-  min-width: 300px;
-  max-width: 600px;
+.svg-preview-box {
+  flex: 1;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  min-height: 120px;
+  color: black;
 }
