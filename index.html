@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>OptimizePrime</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -11,67 +11,29 @@
 
     <div class="drop-area" id="dropArea">
       <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
     </div>
 
     <div class="controls">
-      <label>Max Width:
-        <input type="number" id="maxWidth" value="800" />
-      </label>
-      <label>Max Height:
-        <input type="number" id="maxHeight" value="800" />
-      </label>
+      <label>Max Width: <input type="number" id="maxWidth" value="800"></label>
+      <label>Max Height: <input type="number" id="maxHeight" value="800"></label>
       <label>Format:
         <select id="format">
           <option value="webp">WebP</option>
           <option value="avif">AVIF</option>
         </select>
       </label>
-      <label>Target Size (KB):
-        <input type="number" id="targetSize" value="200" />
-      </label>
-    </div>
-
-    <div class="button-bar">
+      <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
       <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn">Download</button>
-      <button id="svgToggleBtn">SVG</button>
+      <button id="downloadAllBtn">Download All</button>
     </div>
 
-    <div id="preview" class="image-preview"></div>
-
-    <div id="svgSection" class="svg-tools hidden">
-      <h2>SVG Creator</h2>
-      <label>Text: <input type="text" id="svgTextInput" placeholder="Enter text..." /></label>
-      <label>Font:
-        <select id="fontSelect">
-          <option value="Arial">Arial</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Times New Roman">Times New Roman</option>
-        </select>
-      </label>
-      <label>Color:
-        <input type="color" id="svgColor" value="#000000" />
-      </label>
-      <label>Custom CSS:</label>
-      <textarea id="svgCSS" placeholder="Enter additional CSS here..."></textarea>
-      <div id="svgPreview" class="svg-preview"></div>
-      <button id="svgDownloadBtn">Download SVG</button>
-    </div>
+    <div id="preview"></div>
   </div>
 
-  <!-- Libraries -->
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
-
-  <!-- Utilities -->
   <script src="utils/imageProcessor.js"></script>
-  <script src="utils/editor.js"></script>
-  <script src="utils/svgConverter.js"></script>
-
-  <!-- Main Logic -->
   <script src="script.js"></script>
 </body>
 </html>
