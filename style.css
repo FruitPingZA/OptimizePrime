@@ -1,145 +1,143 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
   margin: 0;
   padding: 0;
-  background: #1a1a1a;
-  color: #f2f2f2;
 }
 
 .container {
-  max-width: 900px;
-  margin: auto;
+  max-width: 1000px;
+  margin: 0 auto;
   padding: 20px;
+  text-align: center;
 }
 
-h1, h2, h3 {
-  text-align: center;
-  color: #ff4eb1;
+h1 {
+  color: #d03b87;
+  margin-bottom: 20px;
 }
 
 .drop-area {
-  border: 2px dashed #ff4eb1;
-  padding: 40px;
-  text-align: center;
+  border: 2px dashed #d03b87;
+  padding: 30px;
   border-radius: 10px;
-  margin-bottom: 20px;
+  background: #fff;
   cursor: pointer;
-  transition: background 0.3s;
-}
-
-.drop-area:hover {
-  background: #2c2c2c;
+  margin-bottom: 20px;
 }
 
 .upload-label {
-  color: #ff4eb1;
+  color: #d03b87;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 10px;
   margin-bottom: 20px;
 }
 
 .controls label {
-  flex: 1 1 180px;
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
+  margin: 10px;
+  display: inline-block;
 }
 
 .controls input,
-.controls select,
-.controls textarea {
+.controls select {
   padding: 6px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: none;
-  margin-top: 5px;
-}
-
-.button-row {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  margin-top: 10px;
+  margin-left: 5px;
 }
 
 button {
-  padding: 10px 16px;
-  background: #ff4eb1;
+  background-color: #d03b87;
+  color: white;
   border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: bold;
+  padding: 10px 20px;
+  margin: 8px 4px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background: #e03e9b;
+  background-color: #a62c6f;
 }
 
-.preview-grid {
+#preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
   justify-content: center;
-  margin-bottom: 30px;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .preview-img {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 10px;
-  border: 1px solid #444;
-  object-fit: cover;
+  max-width: 150px;
+  border-radius: 6px;
+  margin-top: 5px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
 
-.svg-controls {
-  background: #2a2a2a;
-  border-radius: 10px;
+.preview-img.compressed {
+  border: 2px solid #4CAF50;
+}
+
+/* SVG Panel Styling */
+#svgOptionsPanel {
+  margin-top: 40px;
   padding: 20px;
-  margin-top: 20px;
+  background: #fff;
+  border: 2px dashed #d03b87;
+  border-radius: 10px;
 }
 
-.svg-controls.hidden {
+#svgOptionsPanel.hidden {
   display: none;
 }
 
-.svg-controls label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 14px;
+.svg-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
-.svg-controls input,
-.svg-controls select,
-.svg-controls textarea {
+.svg-options input[type="text"],
+.svg-options select,
+.svg-options input[type="color"] {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#svgCustomCSS {
   width: 100%;
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: none;
-  margin-top: 5px;
-  background: #fff;
-  color: #000;
+  max-width: 500px;
+  min-height: 80px;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: monospace;
 }
 
-.svg-preview-section {
-  margin-top: 20px;
+.svg-preview-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #svgPreviewContainer {
   margin-top: 10px;
-  padding: 10px;
-  background: #fff;
-  border-radius: 10px;
-  min-height: 150px;
-  overflow: auto;
-  color: #000;
+  padding: 15px;
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  min-width: 300px;
+  max-width: 600px;
 }
