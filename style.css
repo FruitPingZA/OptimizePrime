@@ -1,36 +1,36 @@
 body {
   font-family: Arial, sans-serif;
+  background: #111;
+  color: #f1f1f1;
   margin: 0;
   padding: 20px;
-  background: #f4f4f4;
 }
 
 .container {
-  max-width: 1000px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: auto;
+  background: #1c1c1c;
+  padding: 20px;
+  border-radius: 10px;
 }
 
 h1 {
   text-align: center;
-  color: #333;
+  color: #ff5cad;
 }
 
 .drop-area {
-  border: 2px dashed #d17da0;
-  border-radius: 10px;
-  padding: 30px;
+  border: 2px dashed #888;
+  padding: 40px;
   text-align: center;
-  margin-bottom: 20px;
-  background: #fff0f5;
+  border-radius: 10px;
+  background: #2a2a2a;
   cursor: pointer;
-}
-
-.drop-area:hover {
-  background-color: #ffe3ed;
+  margin-bottom: 20px;
 }
 
 .upload-label {
-  color: #d17da0;
+  color: #ff5cad;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -38,108 +38,40 @@ h1 {
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  justify-content: space-between;
+  gap: 10px;
+  justify-content: center;
   margin-bottom: 20px;
 }
 
 .controls label {
   display: flex;
   flex-direction: column;
-  font-weight: bold;
-  color: #333;
-}
-
-.controls input,
-.controls select {
-  padding: 6px;
   font-size: 14px;
-  margin-top: 5px;
-}
-
-.button-bar {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 20px;
+  color: #ccc;
 }
 
 button {
-  padding: 10px 20px;
+  background: #ff5cad;
   border: none;
-  background-color: #d17da0;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 5px;
+  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  color: white;
+  font-weight: bold;
 }
 
 button:hover {
-  background-color: #c1608a;
-}
-
-#preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-}
-
-.image-container {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #fff;
-  text-align: center;
-  max-width: 250px;
+  background: #e84a9d;
 }
 
 .preview-img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
+  max-width: 200px;
+  margin: 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
 }
 
-.preview-img.compressed {
-  margin-top: 10px;
-  border: 2px solid #4caf50;
-}
-
-.svg-tools {
-  margin-top: 30px;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
-.svg-tools label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: #444;
-}
-
-.svg-tools input,
-.svg-tools select,
-.svg-tools textarea {
-  margin-top: 5px;
-  margin-bottom: 15px;
-  width: 100%;
-  padding: 8px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-#svgPreview {
-  border: 1px dashed #ccc;
-  min-height: 200px;
-  padding: 15px;
-  margin-bottom: 10px;
-  background-color: #fafafa;
-}
-
-.hidden {
-  display: none;
+.image-container {
+  display: inline-block;
+  text-align: center;
 }
