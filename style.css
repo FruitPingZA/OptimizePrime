@@ -1,77 +1,145 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>OptimizePrime</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>OptimizePrime</h1>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f4f4f4;
+}
 
-    <div class="drop-area" id="dropArea">
-      <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
-    </div>
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
 
-    <div class="controls">
-      <label>Max Width:
-        <input type="number" id="maxWidth" value="800" />
-      </label>
-      <label>Max Height:
-        <input type="number" id="maxHeight" value="800" />
-      </label>
-      <label>Format:
-        <select id="format">
-          <option value="webp">WebP</option>
-          <option value="avif">AVIF</option>
-        </select>
-      </label>
-      <label>Target Size (KB):
-        <input type="number" id="targetSize" value="200" />
-      </label>
-    </div>
+h1 {
+  text-align: center;
+  color: #333;
+}
 
-    <div class="button-bar">
-      <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn">Download</button>
-      <button id="svgToggleBtn">SVG</button>
-    </div>
+.drop-area {
+  border: 2px dashed #d17da0;
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  margin-bottom: 20px;
+  background: #fff0f5;
+  cursor: pointer;
+}
 
-    <div id="preview" class="image-preview"></div>
+.drop-area:hover {
+  background-color: #ffe3ed;
+}
 
-    <div id="svgSection" class="svg-tools hidden">
-      <h2>SVG Creator</h2>
-      <label>Text: <input type="text" id="svgTextInput" placeholder="Enter text..." /></label>
-      <label>Font:
-        <select id="fontSelect">
-          <option value="Arial">Arial</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Times New Roman">Times New Roman</option>
-        </select>
-      </label>
-      <label>Color:
-        <input type="color" id="svgColor" value="#000000" />
-      </label>
-      <label>Custom CSS:</label>
-      <textarea id="svgCSS" placeholder="Enter additional CSS here..."></textarea>
-      <div id="svgPreview" class="svg-preview"></div>
-      <button id="svgDownloadBtn">Download SVG</button>
-    </div>
-  </div>
+.upload-label {
+  color: #d17da0;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
-  <!-- Libraries -->
-  <script src="lib/jszip.min.js"></script>
-  <script src="lib/FileSaver.min.js"></script>
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
 
-  <!-- Utilities -->
-  <script src="utils/imageProcessor.js"></script>
-  <script src="utils/editor.js"></script>
-  <script src="utils/svgConverter.js"></script>
+.controls label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  color: #333;
+}
 
-  <!-- Main Logic -->
-  <script src="script.js"></script>
-</body>
-</html>
+.controls input,
+.controls select {
+  padding: 6px;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.button-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #d17da0;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background-color: #c1608a;
+}
+
+#preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.image-container {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #fff;
+  text-align: center;
+  max-width: 250px;
+}
+
+.preview-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.preview-img.compressed {
+  margin-top: 10px;
+  border: 2px solid #4caf50;
+}
+
+.svg-tools {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.svg-tools label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #444;
+}
+
+.svg-tools input,
+.svg-tools select,
+.svg-tools textarea {
+  margin-top: 5px;
+  margin-bottom: 15px;
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+#svgPreview {
+  border: 1px dashed #ccc;
+  min-height: 200px;
+  padding: 15px;
+  margin-bottom: 10px;
+  background-color: #fafafa;
+}
+
+.hidden {
+  display: none;
+}
