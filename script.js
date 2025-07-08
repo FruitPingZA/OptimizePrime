@@ -48,7 +48,6 @@ function handleFiles(event) {
     reader.readAsDataURL(file);
   });
 
-  // Reset file input so same files can be selected again
   fileInput.value = "";
 }
 
@@ -99,7 +98,7 @@ async function downloadAll() {
         const base = name.replace(/\.[^/.]+$/, "");
         const extName = `${base}.${format}`;
         saveAs(blob, extName);
-        await new Promise(res => setTimeout(res, 150)); // Give browser time to trigger download
+        await new Promise(res => setTimeout(res, 150));
       }
     }
   } catch (err) {
