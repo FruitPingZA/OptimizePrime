@@ -12,11 +12,13 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
-// Prevent default browser behavior for drag and drop
+// Drag-and-drop setup
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  handleFiles({ target: { files: e.dataTransfer.files } });
+  if (e.dataTransfer.files.length) {
+    handleFiles({ target: { files: e.dataTransfer.files } });
+  }
 });
 dropArea.addEventListener("click", () => fileInput.click());
 
@@ -24,6 +26,8 @@ let filesToProcess = [];
 
 function handleFiles(event) {
   filesToProcess = Array.from(event.target.files);
+  if (!filesToProcess.length) return;
+
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
@@ -50,14 +54,14 @@ function handleFiles(event) {
     reader.readAsDataURL(file);
   });
 
-  // Reset file input value so the same file can be selected again
+  // Reset file input so same files can be selected again
   fileInput.value = "";
 }
 
 async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value;
+  const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
   processedBlobs = [];
 
@@ -69,7 +73,9 @@ async function processImages() {
     compressedImg.className = "preview-img compressed";
 
     element.appendChild(compressedImg);
-    processedBlobs.push({ blob, name: file.name });
+
+    const baseName = file.name.replace(/\.[^/.]+$/, "");
+    processedBlobs.push({ blob, name: `${baseName}.${format}` });
   }
 }
 
@@ -82,9 +88,7 @@ function downloadAll() {
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
-      const ext = name.split(".").pop();
-      const base = name.replace(/\.[^/.]+$/, "");
-      zip.file(`${base}.${ext}`, blob);
+      zip.file(name, blob);
     });
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
