@@ -8,25 +8,38 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   canvas.height = Math.round(img.height * scale);
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  let quality = 0.95, blob;
-  do {
-    blob = await new Promise(r => canvas.toBlob(r, `image/${format}`, quality));
-    quality -= 0.05;
-  } while (blob.size > targetSize && quality > 0.05);
+  let quality = 0.95;
+  let blob;
 
-  return blob;
+  if (format === "avif") {
+    do {
+      blob = await window.encodeAvifFromCanvas(canvas, quality * 100);
+      quality -= 0.05;
+    } while (blob.size > targetSize && quality > 0.05);
+  } else {
+    do {
+      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+      quality -= 0.05;
+    } while (blob.size > targetSize && quality > 0.05);
+  }
+
+  return {
+    blob,
+    previewURL: URL.createObjectURL(blob),
+    name: file.name.replace(/\.[^/.]+$/, `.${format}`)
+  };
 }
 
 function loadImageFromFile(file) {
-  return new Promise((res, rej) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
-      img.onload = () => res(img);
-      img.onerror = rej;
+      img.onload = () => resolve(img);
+      img.onerror = reject;
       img.src = reader.result;
     };
-    reader.onerror = rej;
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
