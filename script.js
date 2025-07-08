@@ -21,11 +21,11 @@ dropArea.addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", e => {
   if (e.target.files.length) {
     loadFiles(e.target.files);
-    fileInput.value = ""; // allow same file re-selection
+    fileInput.value = ""; // Reset for re-select
   }
 });
 
-// Load images and show preview
+// Load and preview files
 function loadFiles(fileList) {
   preview.innerHTML = "";
   processedBlobs = [];
@@ -87,21 +87,38 @@ downloadBtn.addEventListener("click", () => {
     return;
   }
 
-  // More than 10 → ZIP
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = "Downloading...";
+
+  // ✅ Create confirmation button
+  const confirmBtn = document.createElement("button");
+  confirmBtn.textContent = "✅ Done downloading - Clear images";
+  confirmBtn.style.marginTop = "10px";
+  confirmBtn.style.display = "block";
+  confirmBtn.style.background = "#44c767";
+  confirmBtn.style.border = "none";
+  confirmBtn.style.padding = "10px";
+  confirmBtn.style.borderRadius = "6px";
+  confirmBtn.style.color = "white";
+  confirmBtn.style.cursor = "pointer";
+
+  confirmBtn.addEventListener("click", () => {
+    clearPreview();
+    confirmBtn.remove();
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = "Download";
+  });
+
+  preview.appendChild(confirmBtn);
+
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
 
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-
-      // Wait before clearing to ensure ZIP triggers download
-      setTimeout(clearPreview, 2000);
     });
   } else {
-    // <= 10 → individual downloads with delay between
-    const delay = 300;
-
     processedBlobs.forEach(({ blob, name }, index) => {
       setTimeout(() => {
         try {
@@ -109,16 +126,12 @@ downloadBtn.addEventListener("click", () => {
         } catch (err) {
           console.error("Download error:", err);
         }
-
-        if (index === processedBlobs.length - 1) {
-          // Clear after final file has had time to trigger
-          setTimeout(clearPreview, delay + 1000);
-        }
-      }, index * delay);
+      }, index * 200);
     });
   }
 });
 
+// Clear previews
 function clearPreview() {
   preview.innerHTML = "";
   processedBlobs = [];
