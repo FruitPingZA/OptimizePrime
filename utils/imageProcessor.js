@@ -11,27 +11,27 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  let blob;
   let quality = 0.95;
-  const minQuality = 0.05;
+  let blob;
 
-  if (format === 'avif') {
+  if (format === "avif") {
+    if (typeof window.encodeAvifFromCanvas !== "function") {
+      throw new Error("AVIF encoder is not available in this browser.");
+    }
+
     do {
-      blob = await window.encodeAvifFromCanvas(canvas, quality * 100);
-      quality -= 0.1;
-    } while (blob.size > targetSize && quality > minQuality);
+      blob = await window.encodeAvifFromCanvas(canvas, Math.round(quality * 100));
+      quality -= 0.05;
+    } while (blob.size > targetSize && quality > 0.05);
   } else {
     do {
       blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
       quality -= 0.05;
-    } while (blob.size > targetSize && quality > minQuality);
+    } while (blob.size > targetSize && quality > 0.05);
   }
 
-  const extension = format.toLowerCase();
-  const name = file.name.replace(/\.[^/.]+$/, '.' + extension);
   const previewURL = URL.createObjectURL(blob);
-
-  return { blob, previewURL, name };
+  return { blob, previewURL, name: file.name };
 }
 
 function loadImageFromFile(file) {
@@ -45,7 +45,3 @@ function loadImageFromFile(file) {
     reader.readAsDataURL(file);
   });
 }
-
-// Make available globally
-window.compressImage = compressImage;
-window.loadImageFromFile = loadImageFromFile;
