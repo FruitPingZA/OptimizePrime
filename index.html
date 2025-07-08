@@ -18,6 +18,7 @@
       <label>Max Height: <input type="number" id="maxHeight" value="800"></label>
       <label>Format:
         <select id="format">
+          <option value="avif">AVIF</option>
           <option value="webp">WebP</option>
           <option value="jpeg">JPEG</option>
           <option value="png">PNG</option>
@@ -25,7 +26,7 @@
       </label>
       <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
       <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn" style="background:#ff5cad">Download</button>
+      <button id="downloadAllBtn">Download</button>
     </div>
 
     <div id="preview"></div>
@@ -33,7 +34,35 @@
 
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
-  <script src="utils/imageProcessor.js"></script>
-  <script src="script.js"></script>
+
+  <script type="module">
+    import { AvifEncoder } from 'https://cdn.jsdelivr.net/npm/@jsquash/avif@0.4.2/+esm';
+
+    window.encodeAvifFromCanvas = async function(canvas, quality = 70) {
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      const encoder = new AvifEncoder();
+      encoder.configure({
+        cqLevel: Math.floor((100 - quality) * 0.63),
+        tileRowsLog2: 0,
+        tileColsLog2: 0
+      });
+
+      encoder.encode(imageData);
+      const avifBuffer = encoder.flush();
+      encoder.close();
+
+      return new Blob([avifBuffer], { type: 'image/avif' });
+    };
+
+    const imageProcessor = document.createElement("script");
+    imageProcessor.src = "utils/imageProcessor.js";
+    document.body.appendChild(imageProcessor);
+
+    const appLogic = document.createElement("script");
+    appLogic.src = "script.js";
+    document.body.appendChild(appLogic);
+  </script>
 </body>
 </html>
