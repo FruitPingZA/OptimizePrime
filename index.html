@@ -36,20 +36,24 @@
 
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
-  <script src="utils/imageProcessor.js"></script>
-  <script src="script.js"></script>
 
-  <!-- AVIF encoder support -->
+  <!-- Load AVIF encoder via CDN module -->
   <script type="module">
-    import { encode } from 'https://cdn.jsdelivr.net/npm/@jsquash/avif@0.4.0/dist/squoosh/avif.mjs';
+    import { AvifEncoder } from 'https://cdn.jsdelivr.net/npm/@jsquash/avif@0.4.2/+esm';
 
-    window.avifEncode = async (imageData, options = {}) => {
-      return await encode(imageData, {
-        quality: options.quality ?? 75,
-        effort: options.effort ?? 4,
-        ...options,
-      });
+    window.encodeAvifFromCanvas = async function(canvas, quality = 70) {
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const encoder = new AvifEncoder();
+      encoder.configure({ cqLevel: Math.floor((100 - quality) * 0.63), tileRowsLog2: 0, tileColsLog2: 0 });
+      encoder.encode(imageData);
+      const avifBuffer = encoder.flush();
+      encoder.close();
+      return new Blob([avifBuffer], { type: 'image/avif' });
     };
   </script>
+
+  <script src="utils/imageProcessor.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
