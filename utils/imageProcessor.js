@@ -11,47 +11,36 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  if (format === "avif") {
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const avifBuffer = await window.avifEncode(imageData, {
-      quality: 60,
-    });
-    const blob = new Blob([avifBuffer], { type: "image/avif" });
-    const previewURL = URL.createObjectURL(blob);
-    return {
-      blob,
-      previewURL,
-      name: file.name.replace(/\.[^/.]+$/, ".avif"),
-    };
+  let blob;
+  let previewURL;
+  let quality = 0.95;
+
+  if (format === "avif" && typeof window.avifEncode === "function") {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    let encoded;
+    do {
+      encoded = await window.avifEncode(imageData, { cqLevel: Math.round((1 - quality) * 63) });
+      blob = new Blob([encoded.buffer], { type: "image/avif" });
+      quality -= 0.05;
+    } while (blob.size > targetSize && quality > 0.05);
+
+    previewURL = URL.createObjectURL(blob);
+    return { blob, previewURL, name: replaceExtension(file.name, "avif") };
   }
 
-  return new Promise((resolve) => {
-    let quality = 0.95;
-    function tryCompress() {
-      canvas.toBlob(
-        (blob) => {
-          if (blob.size > targetSize && quality > 0.1) {
-            quality -= 0.05;
-            tryCompress();
-          } else {
-            const previewURL = URL.createObjectURL(blob);
-            resolve({
-              blob,
-              previewURL,
-              name: file.name.replace(/\.[^/.]+$/, "." + format),
-            });
-          }
-        },
-        "image/" + format,
-        quality
-      );
-    }
-    tryCompress();
-  });
+  // Standard compression using toBlob for other formats
+  do {
+    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+    quality -= 0.05;
+  } while (blob && blob.size > targetSize && quality > 0.05);
+
+  previewURL = URL.createObjectURL(blob);
+  return { blob, previewURL, name: replaceExtension(file.name, format) };
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
@@ -60,4 +49,8 @@ function loadImageFromFile(file) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+function replaceExtension(filename, newExt) {
+  return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
 }
