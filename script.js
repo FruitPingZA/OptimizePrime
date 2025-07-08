@@ -25,9 +25,13 @@ dropArea.addEventListener("click", () => fileInput.click());
 let filesToProcess = [];
 
 function handleFiles(event) {
-  filesToProcess = Array.from(event.target.files);
-  if (!filesToProcess.length) return;
+  const fileList = event.target.files;
+  if (!fileList || fileList.length === 0) return;
 
+  // ✅ Reset input early to allow same file selection again
+  fileInput.value = "";
+
+  filesToProcess = Array.from(fileList);
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
@@ -53,9 +57,6 @@ function handleFiles(event) {
     };
     reader.readAsDataURL(file);
   });
-
-  // ✅ Reset file input so same files can be selected again
-  fileInput.value = "";
 }
 
 async function processImages() {
@@ -94,18 +95,28 @@ function downloadAll() {
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
 
-      // ✅ Delay clearing to allow ZIP download to trigger
-      setTimeout(() => clearPreview(), 1000);
+      // ✅ Delay clearing to allow ZIP download to begin
+      setTimeout(() => {
+        clearPreview();
+      }, 1500);
     });
   } else {
+    let completed = 0;
+
     processedBlobs.forEach(({ blob, name }, index) => {
       setTimeout(() => {
-        saveAs(blob, name);
-        if (index === processedBlobs.length - 1) {
-          // ✅ Clear after last download triggers
-          setTimeout(() => clearPreview(), 1000);
+        try {
+          saveAs(blob, name);
+        } catch (err) {
+          console.error("Download failed:", err);
         }
-      }, index * 100); // slight stagger in case of race conditions
+
+        completed++;
+        if (completed === processedBlobs.length) {
+          // ✅ Delay clear after final download is triggered
+          setTimeout(() => clearPreview(), 1500);
+        }
+      }, index * 200); // Slight stagger between downloads
     });
   }
 }
