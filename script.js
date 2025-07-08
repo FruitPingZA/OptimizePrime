@@ -1,3 +1,5 @@
+// script.js
+
 let processedBlobs = [];
 let originalPreviews = [];
 
@@ -18,7 +20,7 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => {
   fileInput.click();
-  fileInput.value = ""; // Reset to allow same file selection again
+  fileInput.value = ""; // allow reselecting same files
 });
 
 let filesToProcess = [];
@@ -92,20 +94,19 @@ async function downloadAll() {
       for (const { blob, name } of processedBlobs) {
         await new Promise(resolve => {
           saveAs(blob, name);
-          setTimeout(resolve, 300); // Wait before clearing
+          setTimeout(resolve, 300);
         });
       }
     }
 
-    setTimeout(clearPreview, 800);
+    setTimeout(() => {
+      preview.innerHTML = "";
+      processedBlobs = [];
+      originalPreviews = [];
+      filesToProcess = [];
+    }, 800);
+
   } catch (err) {
     alert("Download failed: " + err.message);
   }
-}
-
-function clearPreview() {
-  preview.innerHTML = "";
-  processedBlobs = [];
-  originalPreviews = [];
-  filesToProcess = [];
 }
