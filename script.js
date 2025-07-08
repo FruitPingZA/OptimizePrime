@@ -91,11 +91,12 @@ async function downloadAll() {
     const a = document.createElement("a");
     a.href = url;
     a.download = "optimizeprime_images.zip";
-    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
   } else {
     for (let i = 0; i < processedBlobs.length; i++) {
       const { blob, name } = processedBlobs[i];
@@ -103,12 +104,11 @@ async function downloadAll() {
       const a = document.createElement("a");
       a.href = url;
       a.download = name;
-      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
+      await new Promise(r => setTimeout(r, 500));
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      await new Promise(r => setTimeout(r, 300));
     }
   }
 
