@@ -116,22 +116,29 @@ downloadBtn.addEventListener("click", () => {
     processedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
 
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
-      saveAs(zipBlob, "optimizeprime_images.zip");
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = "optimizeprime_images.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
   } else {
     processedBlobs.forEach(({ blob, name }, index) => {
       setTimeout(() => {
-        try {
-          saveAs(blob, name);
-        } catch (err) {
-          console.error("Download error:", err);
-        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }, index * 200);
     });
   }
 });
 
-// Clear previews
 function clearPreview() {
   preview.innerHTML = "";
   processedBlobs = [];
