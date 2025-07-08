@@ -19,9 +19,7 @@ dropArea.addEventListener("drop", e => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
-dropArea.addEventListener("click", () => {
-  fileInput.click();
-});
+dropArea.addEventListener("click", () => fileInput.click());
 
 function handleFiles(event) {
   filesToProcess = Array.from(event.target.files);
@@ -91,21 +89,39 @@ async function downloadAll() {
     });
     const zipBlob = await zip.generateAsync({ type: "blob" });
     saveAs(zipBlob, "optimizeprime_images.zip");
-    setTimeout(clearAll, 1500);
   } else {
     for (const { blob, name } of processedBlobs) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = name;
-      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
-      await new Promise(res => setTimeout(res, 300)); // let the download start
+      await new Promise(res => setTimeout(res, 300));
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-    setTimeout(clearAll, 1000); // clear AFTER downloads actually start
+  }
+
+  showClearButton();
+}
+
+function showClearButton() {
+  if (!document.getElementById("clearBtn")) {
+    const clearBtn = document.createElement("button");
+    clearBtn.id = "clearBtn";
+    clearBtn.textContent = "Clear";
+    clearBtn.style.marginTop = "10px";
+    clearBtn.style.background = "#ff5cad"; // match other pink buttons
+    clearBtn.style.border = "none";
+    clearBtn.style.padding = "10px 20px";
+    clearBtn.style.color = "#fff";
+    clearBtn.style.fontWeight = "bold";
+    clearBtn.style.borderRadius = "6px";
+    clearBtn.style.cursor = "pointer";
+    clearBtn.addEventListener("click", clearAll);
+
+    document.querySelector(".controls").appendChild(clearBtn);
   }
 }
 
@@ -114,4 +130,7 @@ function clearAll() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
+
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) clearBtn.remove();
 }
