@@ -12,12 +12,33 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
   let quality = 0.95;
-  let blob;
+  let blob = null;
 
-  do {
-    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+  while (quality > 0.05) {
+    blob = await new Promise(resolve => {
+      canvas.toBlob(
+        b => resolve(b),
+        `image/${format}`,
+        quality
+      );
+    });
+
+    if (blob && blob.size <= targetSize) break;
     quality -= 0.05;
-  } while (blob.size > targetSize && quality > 0.05);
+  }
+
+  // If AVIF fails and returns null, force fallback to WebP (optional)
+  if (!blob && format === "avif") {
+    console.warn("AVIF failed, falling back to WebP.");
+    return compressImage(file, "webp", maxWidth, maxHeight, targetSize);
+  }
+
+  // If all else fails, fallback to PNG
+  if (!blob) {
+    blob = await new Promise(resolve => {
+      canvas.toBlob(b => resolve(b), "image/png", 0.9);
+    });
+  }
 
   const previewURL = URL.createObjectURL(blob);
   return { blob, previewURL, name: file.name };
