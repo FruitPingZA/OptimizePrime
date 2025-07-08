@@ -11,12 +11,15 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
-dropArea.addEventListener("dragover", (e) => e.preventDefault());
-dropArea.addEventListener("drop", (e) => {
+dropArea.addEventListener("dragover", e => e.preventDefault());
+dropArea.addEventListener("drop", e => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
-dropArea.addEventListener("click", () => fileInput.click());
+dropArea.addEventListener("click", () => {
+  fileInput.click();
+  fileInput.value = ""; // Reset to allow same file selection again
+});
 
 let filesToProcess = [];
 
@@ -28,7 +31,7 @@ function handleFiles(event) {
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const container = document.createElement("div");
       container.className = "image-container";
 
@@ -47,8 +50,6 @@ function handleFiles(event) {
     };
     reader.readAsDataURL(file);
   });
-
-  fileInput.value = ""; // Allow same file to be reselected
 }
 
 async function processImages() {
@@ -78,21 +79,28 @@ async function downloadAll() {
 
   const isZip = processedBlobs.length > 10;
 
-  if (isZip) {
-    const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    saveAs(zipBlob, "optimizeprime_images.zip");
-  } else {
-    for (const { blob, name } of processedBlobs) {
-      saveAs(blob, name);
-      await new Promise((res) => setTimeout(res, 300));
-    }
-  }
+  try {
+    if (isZip) {
+      const zip = new JSZip();
+      processedBlobs.forEach(({ blob, name }) => {
+        zip.file(name, blob);
+      });
 
-  clearPreview();
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, "optimizeprime_images.zip");
+    } else {
+      for (const { blob, name } of processedBlobs) {
+        await new Promise(resolve => {
+          saveAs(blob, name);
+          setTimeout(resolve, 300); // Wait before clearing
+        });
+      }
+    }
+
+    setTimeout(clearPreview, 800);
+  } catch (err) {
+    alert("Download failed: " + err.message);
+  }
 }
 
 function clearPreview() {
