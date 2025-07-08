@@ -1,129 +1,121 @@
-// Ensure FileSaver.js and JSZip are loaded before this file
+// script.js
+
+// Globals
 let processedBlobs = [];
 let originalPreviews = [];
 
-const fileInput = document.getElementById("fileInput");
-const processBtn = document.getElementById("processBtn");
-const downloadAllBtn = document.getElementById("downloadAllBtn");
-const dropArea = document.getElementById("dropArea");
-const preview = document.getElementById("preview");
+// Elements
+const fileInput       = document.getElementById("fileInput");
+const processBtn      = document.getElementById("processBtn");
+const downloadAllBtn  = document.getElementById("downloadAllBtn");
+const dropArea        = document.getElementById("dropArea");
+const previewContainer= document.getElementById("preview");
 
-fileInput.addEventListener("change", handleFiles);
-processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", downloadAll);
-
-// Drag-and-drop setup
+// Event Listeners
+fileInput.addEventListener("change", e => handleFiles(e.target.files));
+dropArea.addEventListener("click", () => fileInput.click());
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  if (e.dataTransfer.files.length) {
-    handleFiles({ target: { files: e.dataTransfer.files } });
-  }
+  handleFiles(e.dataTransfer.files);
 });
-dropArea.addEventListener("click", () => fileInput.click());
+processBtn.addEventListener("click", processImages);
+downloadAllBtn.addEventListener("click", downloadAll);
 
-let filesToProcess = [];
-
-function handleFiles(event) {
-  const fileList = event.target.files;
+// Handle new files (either from <input> or drop)
+function handleFiles(fileList) {
   if (!fileList || fileList.length === 0) return;
 
-  // ✅ Reset input early to allow same file selection again
-  fileInput.value = "";
+  // Clone FileList → Array
+  const files = Array.from(fileList);
 
-  filesToProcess = Array.from(fileList);
-  preview.innerHTML = "";
+  // Reset state & UI
+  previewContainer.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
 
-  filesToProcess.forEach((file, index) => {
+  // Show previews
+  files.forEach(file => {
     const reader = new FileReader();
-    reader.onload = e => {
-      const container = document.createElement("div");
-      container.className = "image-container";
+    reader.onload = () => {
+      // Container
+      const wrapper = document.createElement("div");
+      wrapper.className = "image-container";
 
-      const originalImg = new Image();
-      originalImg.src = e.target.result;
-      originalImg.className = "preview-img";
-
+      // Label
       const label = document.createElement("p");
-      label.innerText = file.name;
+      label.textContent = file.name;
 
-      container.appendChild(label);
-      container.appendChild(originalImg);
-      preview.appendChild(container);
+      // Original preview
+      const img = document.createElement("img");
+      img.src = reader.result;
+      img.className = "preview-img";
 
-      originalPreviews.push({ index, file, element: container });
+      wrapper.append(label, img);
+      previewContainer.appendChild(wrapper);
+
+      originalPreviews.push({ file, wrapper });
     };
     reader.readAsDataURL(file);
   });
+
+  // Reset file input so same files can be re-picked
+  fileInput.value = "";
 }
 
 async function processImages() {
-  const maxWidth = parseInt(document.getElementById("maxWidth").value);
-  const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value.toLowerCase();
-  const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-  processedBlobs = [];
+  const maxW      = +document.getElementById("maxWidth").value;
+  const maxH      = +document.getElementById("maxHeight").value;
+  const fmt       = document.getElementById("format").value.toLowerCase();
+  const tgtSize   = +document.getElementById("targetSize").value * 1024;
 
-  for (const { file, element } of originalPreviews) {
-    const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+  // Compress each
+  for (const { file, wrapper } of originalPreviews) {
+    const { blob, previewURL } = await compressImage(file, fmt, maxW, maxH, tgtSize);
 
-    const compressedImg = new Image();
-    compressedImg.src = previewURL;
-    compressedImg.className = "preview-img compressed";
+    // Show compressed below original
+    const img2 = document.createElement("img");
+    img2.src = previewURL;
+    img2.className = "preview-img compressed";
+    wrapper.appendChild(img2);
 
-    element.appendChild(compressedImg);
-
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    processedBlobs.push({ blob, name: `${baseName}.${format}` });
+    // Store for download
+    const base = file.name.replace(/\.[^/.]+$/, "");
+    processedBlobs.push({ blob, name: `${base}.${fmt}` });
   }
 }
 
 function downloadAll() {
-  if (!processedBlobs.length) {
-    alert("No images to download.");
-    return;
+  if (processedBlobs.length === 0) {
+    return alert("No images to download.");
   }
 
+  // >10 → ZIP
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
+    processedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
 
-    zip.generateAsync({ type: "blob" }).then(zipBlob => {
-      saveAs(zipBlob, "optimizeprime_images.zip");
-
-      // ✅ Delay clearing to allow ZIP download to begin
-      setTimeout(() => {
-        clearPreview();
-      }, 1500);
+    zip.generateAsync({ type: "blob" }).then(zb => {
+      saveAs(zb, "optimizeprime_images.zip");
+      // Clear after a short pause
+      setTimeout(clearPreview, 1000);
     });
   } else {
-    let completed = 0;
-
-    processedBlobs.forEach(({ blob, name }, index) => {
+    // ≤10 → individual
+    processedBlobs.forEach(({ blob, name }, i) => {
+      // stagger by 200ms ensures each click registers
       setTimeout(() => {
-        try {
-          saveAs(blob, name);
-        } catch (err) {
-          console.error("Download failed:", err);
+        saveAs(blob, name);
+        if (i === processedBlobs.length - 1) {
+          setTimeout(clearPreview, 1000);
         }
-
-        completed++;
-        if (completed === processedBlobs.length) {
-          // ✅ Delay clear after final download is triggered
-          setTimeout(() => clearPreview(), 1500);
-        }
-      }, index * 200); // Slight stagger between downloads
+      }, i * 200);
     });
   }
 }
 
 function clearPreview() {
-  preview.innerHTML = "";
+  previewContainer.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
-  filesToProcess = [];
 }
