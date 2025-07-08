@@ -18,7 +18,7 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => {
   fileInput.click();
-  fileInput.value = ""; // allow reselection
+  fileInput.value = ""; // allow re-browse
 });
 
 let filesToProcess = [];
@@ -81,30 +81,38 @@ async function downloadAll() {
     return;
   }
 
-  const isZip = processedBlobs.length > 10;
-
-  try {
-    if (isZip) {
-      const zip = new JSZip();
-      processedBlobs.forEach(({ blob, name }) => {
-        zip.file(name, blob);
-      });
-      const zipBlob = await zip.generateAsync({ type: "blob" });
-      saveAs(zipBlob, "optimizeprime_images.zip");
-    } else {
-      for (const { blob, name } of processedBlobs) {
-        if (!blob || blob.size === 0) {
-          console.warn("Skipping invalid blob for", name);
-          continue;
-        }
-        saveAs(blob, name);
-        await new Promise(res => setTimeout(res, 400));
-      }
+  if (processedBlobs.length > 10) {
+    const zip = new JSZip();
+    processedBlobs.forEach(({ blob, name }) => {
+      zip.file(name, blob);
+    });
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "optimizeprime_images.zip";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } else {
+    for (let i = 0; i < processedBlobs.length; i++) {
+      const { blob, name } = processedBlobs[i];
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      await new Promise(r => setTimeout(r, 300));
     }
-    showClearButton();
-  } catch (err) {
-    alert("Download failed: " + err.message);
   }
+
+  showClearButton();
 }
 
 function showClearButton() {
