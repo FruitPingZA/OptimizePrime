@@ -1,4 +1,4 @@
-import { compressImage } from "./utils/imageProcessor.js";
+// Assumes compressImage is loaded globally from imageProcessor.js
 
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
@@ -84,12 +84,12 @@ async function downloadAll() {
   }
 
   if (processedBlobs.length > 10) {
-    const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
-
     try {
+      const zip = new JSZip();
+      processedBlobs.forEach(({ blob, name }) => {
+        zip.file(name, blob);
+      });
+
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const zipURL = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
@@ -98,6 +98,7 @@ async function downloadAll() {
       a.style.display = "none";
       document.body.appendChild(a);
       a.click();
+
       setTimeout(() => {
         URL.revokeObjectURL(zipURL);
         document.body.removeChild(a);
@@ -119,7 +120,6 @@ async function downloadAll() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-
     showClearButton();
   }
 }
