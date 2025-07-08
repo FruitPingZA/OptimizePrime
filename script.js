@@ -54,7 +54,7 @@ function handleFiles(event) {
     reader.readAsDataURL(file);
   });
 
-  // Reset file input so same files can be selected again
+  // ✅ Reset file input so same files can be selected again
   fileInput.value = "";
 }
 
@@ -90,18 +90,22 @@ function downloadAll() {
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
+
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      clearPreview();
+
+      // ✅ Delay clearing to allow ZIP download to trigger
+      setTimeout(() => clearPreview(), 1000);
     });
   } else {
-    let completed = 0;
-    processedBlobs.forEach(({ blob, name }) => {
-      saveAs(blob, name);
-      completed++;
-      if (completed === processedBlobs.length) {
-        setTimeout(() => clearPreview(), 500);
-      }
+    processedBlobs.forEach(({ blob, name }, index) => {
+      setTimeout(() => {
+        saveAs(blob, name);
+        if (index === processedBlobs.length - 1) {
+          // ✅ Clear after last download triggers
+          setTimeout(() => clearPreview(), 1000);
+        }
+      }, index * 100); // slight stagger in case of race conditions
     });
   }
 }
