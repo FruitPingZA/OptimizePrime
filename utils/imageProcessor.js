@@ -1,5 +1,3 @@
-import { encodeAvifFromCanvas } from './utils/avifEnc.js';
-
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -19,7 +17,7 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 
   if (format === 'avif') {
     do {
-      blob = await encodeAvifFromCanvas(canvas, quality * 100);
+      blob = await window.encodeAvifFromCanvas(canvas, quality * 100);
       quality -= 0.1;
     } while (blob.size > targetSize && quality > minQuality);
   } else {
@@ -48,6 +46,6 @@ function loadImageFromFile(file) {
   });
 }
 
-// Make accessible to script.js
+// Make available globally
 window.compressImage = compressImage;
 window.loadImageFromFile = loadImageFromFile;
