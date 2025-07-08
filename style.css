@@ -75,3 +75,19 @@ button:hover {
   display: inline-block;
   text-align: center;
 }
+
+.download-confirm-button {
+  margin-top: 10px;
+  display: block;
+  background: #ff5cad;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.download-confirm-button:hover {
+  background: #e84a9d;
+}
