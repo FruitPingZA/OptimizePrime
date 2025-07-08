@@ -13,41 +13,28 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 
   let blob, previewURL, name;
 
-  if (format === "avif" && typeof window.avifEncode === "function") {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const avifBuffer = await window.avifEncode(imageData, { quality: 75 });
-    blob = new Blob([avifBuffer], { type: "image/avif" });
-    previewURL = URL.createObjectURL(blob);
-    name = replaceExtension(file.name, "avif");
+  const ext = format.toLowerCase();
+  const mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
 
+  if (ext === "avif" && typeof window.avifEncode === "function") {
+    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    const encodedBuffer = await window.avifEncode(imageData, { quality: 75 });
+    blob = new Blob([encodedBuffer], { type: "image/avif" });
   } else {
     let quality = 0.95;
-    const mime = `image/${format === "jpg" ? "jpeg" : format}`;
-
     do {
-      blob = await new Promise(res => canvas.toBlob(res, mime, quality));
+      blob = await new Promise(res => canvas.toBlob(res, mimeType, quality));
       quality -= 0.05;
-    } while (blob.size > targetSize && quality > 0.05);
-
-    previewURL = URL.createObjectURL(blob);
-    name = replaceExtension(file.name, format);
+    } while (blob && blob.size > targetSize && quality > 0.05);
   }
 
+  // Fallback check
+  if (!blob || blob.size === 0) {
+    throw new Error(`Compression failed for format: ${format}`);
+  }
+
+  previewURL = URL.createObjectURL(blob);
+  name = replaceExtension(file.name, ext);
+
   return { blob, previewURL, name };
-}
-
-function loadImageFromFile(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function replaceExtension(filename, newExt) {
-  return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
 }
