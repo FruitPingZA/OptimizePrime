@@ -56,13 +56,17 @@
       return new Blob([avifBuffer], { type: 'image/avif' });
     };
 
-    const imageProcessor = document.createElement("script");
-    imageProcessor.src = "utils/imageProcessor.js";
-    document.body.appendChild(imageProcessor);
+    // Dynamically load JS in correct order
+    const loadScript = (src) => new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.body.appendChild(s);
+    });
 
-    const appLogic = document.createElement("script");
-    appLogic.src = "script.js";
-    document.body.appendChild(appLogic);
+    await loadScript("utils/imageProcessor.js");
+    await loadScript("script.js");
   </script>
 </body>
 </html>
