@@ -1,5 +1,3 @@
-// utils/imageProcessor.js
-
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -13,39 +11,33 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  let blob;
-  let previewURL;
-  let quality = 0.95;
+  let blob, previewURL, name;
 
   if (format === "avif" && typeof window.avifEncode === "function") {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const avifBuffer = await window.avifEncode(imageData, { quality: 75 });
+    blob = new Blob([avifBuffer], { type: "image/avif" });
+    previewURL = URL.createObjectURL(blob);
+    name = replaceExtension(file.name, "avif");
 
-    let encoded;
+  } else {
+    let quality = 0.95;
+    const mime = `image/${format === "jpg" ? "jpeg" : format}`;
+
     do {
-      encoded = await window.avifEncode(imageData, {
-        cqLevel: Math.round((1 - quality) * 63),
-        effort: 4,
-      });
-      blob = new Blob([encoded.buffer], { type: "image/avif" });
+      blob = await new Promise(res => canvas.toBlob(res, mime, quality));
       quality -= 0.05;
     } while (blob.size > targetSize && quality > 0.05);
 
     previewURL = URL.createObjectURL(blob);
-    return { blob, previewURL, name: replaceExtension(file.name, "avif") };
+    name = replaceExtension(file.name, format);
   }
 
-  // Fallback for non-AVIF formats
-  do {
-    blob = await new Promise((res) => canvas.toBlob(res, `image/${format}`, quality));
-    quality -= 0.05;
-  } while (blob && blob.size > targetSize && quality > 0.05);
-
-  previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: replaceExtension(file.name, format) };
+  return { blob, previewURL, name };
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
