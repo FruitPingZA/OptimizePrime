@@ -1,4 +1,4 @@
-// FINAL script.js with proper AVIF handling and delayed clearing
+// FINAL script.js — Fixed download behavior
 
 let processedBlobs = [];
 let originalPreviews = [];
@@ -20,7 +20,7 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => {
   fileInput.click();
-  fileInput.value = "";
+  fileInput.value = ""; // allow reselection
 });
 
 let filesToProcess = [];
@@ -67,7 +67,6 @@ async function processImages() {
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
-
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
     } catch (err) {
@@ -92,30 +91,30 @@ async function downloadAll() {
       processedBlobs.forEach(({ blob, name }) => {
         zip.file(name, blob);
       });
-
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "optimizeprime_images.zip");
     } else {
       for (const { blob, name } of processedBlobs) {
+        if (!blob || blob.size === 0) {
+          console.warn("Skipping invalid blob for", name);
+          continue;
+        }
         saveAs(blob, name);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(res => setTimeout(res, 400));
       }
     }
-
     showClearButton();
-
   } catch (err) {
     alert("Download failed: " + err.message);
   }
 }
 
 function showClearButton() {
-  let existingBtn = document.getElementById("clearBtn");
-  if (existingBtn) return;
+  if (document.getElementById("clearBtn")) return;
 
   const clearBtn = document.createElement("button");
-  clearBtn.textContent = "Clear All";
   clearBtn.id = "clearBtn";
+  clearBtn.textContent = "Clear All";
   clearBtn.style.background = "#ff5cad";
   clearBtn.style.marginTop = "15px";
   clearBtn.onclick = () => {
