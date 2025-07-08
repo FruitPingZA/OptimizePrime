@@ -61,14 +61,6 @@ processBtn.addEventListener("click", async () => {
   const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
 
-  if (format === "avif") {
-    const supported = await isAvifSupported();
-    if (!supported) {
-      alert("⚠️ AVIF is not supported in this browser. Please use Chrome or Firefox.");
-      return;
-    }
-  }
-
   processedBlobs = [];
 
   for (const { file, container } of originalPreviews) {
@@ -138,18 +130,4 @@ function clearPreview() {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
-}
-
-function isAvifSupported() {
-  return new Promise(resolve => {
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 2;
-    canvas.toBlob(
-      blob => {
-        resolve(blob && blob.type === "image/avif");
-      },
-      "image/avif",
-      0.5
-    );
-  });
 }
