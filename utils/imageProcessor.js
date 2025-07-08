@@ -1,3 +1,5 @@
+// utils/imageProcessor.js
+
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -40,4 +42,20 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 
   previewURL = URL.createObjectURL(blob);
   return { blob, previewURL, name: replaceExtension(file.name, format) };
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function replaceExtension(filename, newExt) {
+  return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
 }
