@@ -1,36 +1,43 @@
 import { compressImage } from "./utils/imageProcessor.js";
 
 const fileInput = document.getElementById("fileInput");
-const dropArea = document.getElementById("dropArea");
-const preview = document.getElementById("preview");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
+const dropArea = document.getElementById("dropArea");
+const preview = document.getElementById("preview");
 
-let originalFiles = [];
+let filesToProcess = [];
 let processedBlobs = [];
+let originalPreviews = [];
 
-dropArea.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", handleFiles);
+processBtn.addEventListener("click", processImages);
+downloadAllBtn.addEventListener("click", downloadAll);
+
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  handleFiles(e.dataTransfer.files);
+  handleFiles({ target: { files: e.dataTransfer.files } });
 });
-fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+dropArea.addEventListener("click", () => {
+  fileInput.click();
+});
 
-function handleFiles(fileList) {
+function handleFiles(event) {
+  filesToProcess = Array.from(event.target.files);
   preview.innerHTML = "";
   processedBlobs = [];
-  originalFiles = Array.from(fileList);
+  originalPreviews = [];
 
-  originalFiles.forEach(file => {
-    const container = document.createElement("div");
-    container.className = "image-container";
-
+  filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
     reader.onload = e => {
+      const container = document.createElement("div");
+      container.className = "image-container";
+
       const originalImg = new Image();
-      originalImg.className = "preview-img";
       originalImg.src = e.target.result;
+      originalImg.className = "preview-img";
 
       const label = document.createElement("p");
       label.innerText = file.name;
@@ -38,6 +45,8 @@ function handleFiles(fileList) {
       container.appendChild(label);
       container.appendChild(originalImg);
       preview.appendChild(container);
+
+      originalPreviews.push({ index, file, element: container });
     };
     reader.readAsDataURL(file);
   });
@@ -45,36 +54,35 @@ function handleFiles(fileList) {
   fileInput.value = "";
 }
 
-processBtn.addEventListener("click", async () => {
-  const format = document.getElementById("format").value;
+async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
+  const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
 
   processedBlobs = [];
 
-  const containers = Array.from(preview.querySelectorAll(".image-container"));
-  for (let i = 0; i < originalFiles.length; i++) {
-    const file = originalFiles[i];
-    const container = containers[i];
-
+  for (const { file, element } of originalPreviews) {
     try {
       const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
 
       const compressedImg = new Image();
-      compressedImg.className = "preview-img compressed";
       compressedImg.src = previewURL;
+      compressedImg.className = "preview-img compressed";
 
-      container.appendChild(compressedImg);
+      element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
     } catch (err) {
-      console.error(`Error compressing ${file.name}:`, err);
+      console.error("Compression error:", err);
     }
   }
-});
+}
 
-downloadAllBtn.addEventListener("click", async () => {
-  if (!processedBlobs.length) return alert("No images to download.");
+async function downloadAll() {
+  if (!processedBlobs.length) {
+    alert("No images to download.");
+    return;
+  }
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -82,17 +90,18 @@ downloadAllBtn.addEventListener("click", async () => {
       zip.file(name, blob);
     });
     const zipBlob = await zip.generateAsync({ type: "blob" });
-    saveAs(zipBlob, "optimizeprime.zip");
+    saveAs(zipBlob, "optimizeprime_images.zip");
   } else {
     for (const { blob, name } of processedBlobs) {
       saveAs(blob, name);
-      await new Promise(res => setTimeout(res, 100)); // ensure download triggers
+      await new Promise(res => setTimeout(res, 100)); // Ensure browser registers download
     }
   }
 
   setTimeout(() => {
     preview.innerHTML = "";
     processedBlobs = [];
-    originalFiles = [];
+    originalPreviews = [];
+    filesToProcess = [];
   }, 1000);
-});
+}
