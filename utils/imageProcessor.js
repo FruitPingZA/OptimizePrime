@@ -27,31 +27,18 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
     quality -= 0.05;
   }
 
-  // If AVIF fails and returns null, force fallback to WebP (optional)
   if (!blob && format === "avif") {
-    console.warn("AVIF failed, falling back to WebP.");
+    console.warn("AVIF encoding failed. Falling back to WebP.");
     return compressImage(file, "webp", maxWidth, maxHeight, targetSize);
   }
 
-  // If all else fails, fallback to PNG
   if (!blob) {
-    blob = await new Promise(resolve => {
-      canvas.toBlob(b => resolve(b), "image/png", 0.9);
-    });
+    console.warn("Fallback to PNG due to unsupported format.");
+    blob = await new Promise(resolve =>
+      canvas.toBlob(b => resolve(b), "image/png", 0.95)
+    );
   }
 
   const previewURL = URL.createObjectURL(blob);
   return { blob, previewURL, name: file.name };
-}
-
-function loadImageFromFile(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
 }
