@@ -62,16 +62,17 @@ async function processImages() {
 
   for (const { file, element } of originalPreviews) {
     try {
-      const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
-
+      const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
 
       element.appendChild(compressedImg);
-      processedBlobs.push({ blob, name });
+
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      processedBlobs.push({ blob, name: `${baseName}.${format}` });
     } catch (err) {
-      console.error("Compression error:", err);
+      console.error(`Error compressing ${file.name}:`, err);
     }
   }
 }
@@ -87,8 +88,25 @@ async function downloadAll() {
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    saveAs(zipBlob, "optimizeprime_images.zip");
+
+    try {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const zipURL = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = zipURL;
+      a.download = "optimizeprime_images.zip";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(zipURL);
+        document.body.removeChild(a);
+        showClearButton();
+      }, 1000);
+    } catch (err) {
+      console.error("ZIP creation failed:", err);
+      alert("Failed to generate ZIP.");
+    }
   } else {
     for (const { blob, name } of processedBlobs) {
       const url = URL.createObjectURL(blob);
@@ -101,9 +119,9 @@ async function downloadAll() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-  }
 
-  showClearButton();
+    showClearButton();
+  }
 }
 
 function showClearButton() {
@@ -112,7 +130,7 @@ function showClearButton() {
     clearBtn.id = "clearBtn";
     clearBtn.textContent = "Clear";
     clearBtn.style.marginTop = "10px";
-    clearBtn.style.background = "#ff5cad"; // match other pink buttons
+    clearBtn.style.background = "#ff5cad";
     clearBtn.style.border = "none";
     clearBtn.style.padding = "10px 20px";
     clearBtn.style.color = "#fff";
