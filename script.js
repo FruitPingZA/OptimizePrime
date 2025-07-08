@@ -91,14 +91,21 @@ async function downloadAll() {
     });
     const zipBlob = await zip.generateAsync({ type: "blob" });
     saveAs(zipBlob, "optimizeprime_images.zip");
-
-    setTimeout(clearAll, 1500); // Wait a moment before clearing
+    setTimeout(clearAll, 1500);
   } else {
     for (const { blob, name } of processedBlobs) {
-      saveAs(blob, name);
-      await new Promise(res => setTimeout(res, 200)); // wait for download to initiate
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      await new Promise(res => setTimeout(res, 300)); // let the download start
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
-    setTimeout(clearAll, 1500); // Ensure browser has time to save all
+    setTimeout(clearAll, 1000); // clear AFTER downloads actually start
   }
 }
 
