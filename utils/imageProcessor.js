@@ -1,5 +1,3 @@
-// imageProcessor.js (with global exposure)
-
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
