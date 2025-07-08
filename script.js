@@ -1,4 +1,4 @@
-// script.js
+// FINAL script.js with proper AVIF handling and delayed clearing
 
 let processedBlobs = [];
 let originalPreviews = [];
@@ -20,7 +20,7 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => {
   fileInput.click();
-  fileInput.value = ""; // allow reselecting same files
+  fileInput.value = "";
 });
 
 let filesToProcess = [];
@@ -62,14 +62,19 @@ async function processImages() {
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
-    const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+    try {
+      const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+      const compressedImg = new Image();
+      compressedImg.src = previewURL;
+      compressedImg.className = "preview-img compressed";
 
-    const compressedImg = new Image();
-    compressedImg.src = previewURL;
-    compressedImg.className = "preview-img compressed";
-
-    element.appendChild(compressedImg);
-    processedBlobs.push({ blob, name });
+      element.appendChild(compressedImg);
+      processedBlobs.push({ blob, name });
+    } catch (err) {
+      const errorLabel = document.createElement("p");
+      errorLabel.innerText = `Error compressing ${file.name}: ${err.message}`;
+      element.appendChild(errorLabel);
+    }
   }
 }
 
@@ -92,21 +97,33 @@ async function downloadAll() {
       saveAs(zipBlob, "optimizeprime_images.zip");
     } else {
       for (const { blob, name } of processedBlobs) {
-        await new Promise(resolve => {
-          saveAs(blob, name);
-          setTimeout(resolve, 300);
-        });
+        saveAs(blob, name);
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
 
-    setTimeout(() => {
-      preview.innerHTML = "";
-      processedBlobs = [];
-      originalPreviews = [];
-      filesToProcess = [];
-    }, 800);
+    showClearButton();
 
   } catch (err) {
     alert("Download failed: " + err.message);
   }
+}
+
+function showClearButton() {
+  let existingBtn = document.getElementById("clearBtn");
+  if (existingBtn) return;
+
+  const clearBtn = document.createElement("button");
+  clearBtn.textContent = "Clear All";
+  clearBtn.id = "clearBtn";
+  clearBtn.style.background = "#ff5cad";
+  clearBtn.style.marginTop = "15px";
+  clearBtn.onclick = () => {
+    preview.innerHTML = "";
+    processedBlobs = [];
+    originalPreviews = [];
+    filesToProcess = [];
+    clearBtn.remove();
+  };
+  preview.appendChild(clearBtn);
 }
