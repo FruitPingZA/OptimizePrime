@@ -1,34 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>OptimizePrime</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Load AVIF encoder via CDN -->
-  <script type="module">
-    import { encode } from 'https://unpkg.com/@jsquash/avif@1.1.1?module';
-    window.avifEncode = encode;
-  </script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <h1>OptimizePrime</h1>
-
     <div class="drop-area" id="dropArea">
-      <p>
-        Drag & drop images here or
-        <label for="fileInput" class="upload-label">browse</label>
-      </p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
     </div>
 
     <div class="controls">
-      <label>Max Width: <input type="number" id="maxWidth" value="800" /></label>
-      <label>Max Height: <input type="number" id="maxHeight" value="800" /></label>
-      <label>
-        Format:
+      <label>Max Width: <input type="number" id="maxWidth" value="800"></label>
+      <label>Max Height: <input type="number" id="maxHeight" value="800"></label>
+      <label>Format:
         <select id="format">
           <option value="webp">WebP</option>
           <option value="avif">AVIF</option>
@@ -37,10 +25,8 @@
           <option value="png">PNG</option>
         </select>
       </label>
-      <label>
-        Target Size (KB): <input type="number" id="targetSize" value="200" />
-      </label>
-      <br />
+      <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
+      <br>
       <button id="processBtn">Compress</button>
       <button id="downloadAllBtn">Download</button>
     </div>
@@ -48,12 +34,22 @@
     <div id="preview"></div>
   </div>
 
-  <!-- Dependency Libraries -->
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
-
-  <!-- App Scripts -->
   <script src="utils/imageProcessor.js"></script>
   <script src="script.js"></script>
+
+  <!-- AVIF encoder support -->
+  <script type="module">
+    import { encode } from 'https://cdn.jsdelivr.net/npm/@jsquash/avif@0.4.0/dist/squoosh/avif.mjs';
+
+    window.avifEncode = async (imageData, options = {}) => {
+      return await encode(imageData, {
+        quality: options.quality ?? 75,
+        effort: options.effort ?? 4,
+        ...options,
+      });
+    };
+  </script>
 </body>
 </html>
