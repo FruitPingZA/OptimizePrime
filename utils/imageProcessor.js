@@ -1,4 +1,4 @@
-export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
+async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -20,7 +20,11 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   } while (blob && blob.size > targetSize && quality > 0.05);
 
   const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name.replace(/\.[^/.]+$/, `.${format}`) };
+  return {
+    blob,
+    previewURL,
+    name: file.name.replace(/\.[^/.]+$/, `.${format}`)
+  };
 }
 
 function loadImageFromFile(file) {
