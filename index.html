@@ -9,7 +9,7 @@
   <div class="container">
     <h1>OptimizePrime</h1>
     <div class="drop-area" id="dropArea">
-      <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
+      <p>Drag & drop images or <label for="fileInput" class="upload-label">browse</label></p>
       <input type="file" id="fileInput" accept="image/*" multiple hidden>
     </div>
 
@@ -19,54 +19,21 @@
       <label>Format:
         <select id="format">
           <option value="webp">WebP</option>
-          <option value="avif">AVIF</option>
           <option value="jpeg">JPEG</option>
-          <option value="jpg">JPG</option>
           <option value="png">PNG</option>
         </select>
       </label>
       <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
-      <br>
       <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn">Download</button>
+      <button id="downloadAllBtn" style="background:#ff5cad">Download</button>
     </div>
 
     <div id="preview"></div>
   </div>
 
-  <!-- Libraries -->
   <script src="lib/jszip.min.js"></script>
   <script src="lib/FileSaver.min.js"></script>
-
-  <!-- Inline AVIF Encoder -->
-  <script type="module">
-    import { AvifEncoder } from 'https://cdn.jsdelivr.net/npm/@jsquash/avif@0.4.2/+esm';
-
-    window.encodeAvifFromCanvas = async function(canvas, quality = 70) {
-      const ctx = canvas.getContext('2d');
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      const encoder = new AvifEncoder();
-      encoder.configure({
-        cqLevel: Math.floor((100 - quality) * 0.63),
-        tileRowsLog2: 0,
-        tileColsLog2: 0
-      });
-
-      encoder.encode(imageData);
-      const avifBuffer = encoder.flush();
-      encoder.close();
-
-      return new Blob([avifBuffer], { type: 'image/avif' });
-    };
-
-    const imageProcessor = document.createElement("script");
-    imageProcessor.src = "utils/imageProcessor.js";
-    document.body.appendChild(imageProcessor);
-
-    const appLogic = document.createElement("script");
-    appLogic.src = "script.js";
-    document.body.appendChild(appLogic);
-  </script>
+  <script src="utils/imageProcessor.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
