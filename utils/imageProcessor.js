@@ -1,3 +1,5 @@
+import { encodeAvifFromCanvas } from './utils/avifEnc.js';
+
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -11,29 +13,25 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  let blob, previewURL, name;
+  let blob;
+  let quality = 0.95;
+  const minQuality = 0.05;
 
-  const ext = format.toLowerCase();
-  const mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-
-  if (ext === "avif" && typeof window.avifEncode === "function") {
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const encodedBuffer = await window.avifEncode(imageData, { quality: 75 });
-    blob = new Blob([encodedBuffer], { type: "image/avif" });
-  } else {
-    let quality = 0.95;
+  if (format === 'avif') {
     do {
-      blob = await new Promise(res => canvas.toBlob(res, mimeType, quality));
+      blob = await encodeAvifFromCanvas(canvas, quality * 100);
+      quality -= 0.1;
+    } while (blob.size > targetSize && quality > minQuality);
+  } else {
+    do {
+      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
       quality -= 0.05;
-    } while (blob && blob.size > targetSize && quality > 0.05);
+    } while (blob.size > targetSize && quality > minQuality);
   }
 
-  if (!blob || blob.size === 0) {
-    throw new Error(`Compression failed for format: ${format}`);
-  }
-
-  previewURL = URL.createObjectURL(blob);
-  name = replaceExtension(file.name, ext);
+  const extension = format.toLowerCase();
+  const name = file.name.replace(/\.[^/.]+$/, '.' + extension);
+  const previewURL = URL.createObjectURL(blob);
 
   return { blob, previewURL, name };
 }
@@ -50,11 +48,6 @@ function loadImageFromFile(file) {
   });
 }
 
-function replaceExtension(filename, newExt) {
-  return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
-}
-
-// Expose functions globally for script.js
+// Make accessible to script.js
 window.compressImage = compressImage;
 window.loadImageFromFile = loadImageFromFile;
-window.replaceExtension = replaceExtension;
