@@ -7,7 +7,7 @@ const downloadBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
-// Allow drag & drop
+// Drag & Drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -17,15 +17,15 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => fileInput.click());
 
-// Handle browse input
+// File Input
 fileInput.addEventListener("change", e => {
   if (e.target.files.length) {
     loadFiles(e.target.files);
-    fileInput.value = ""; // Reset so selecting same files again works
+    fileInput.value = ""; // allow same file re-selection
   }
 });
 
-// Load and preview selected files
+// Load images and show preview
 function loadFiles(fileList) {
   preview.innerHTML = "";
   processedBlobs = [];
@@ -39,15 +39,14 @@ function loadFiles(fileList) {
       const container = document.createElement("div");
       container.className = "image-container";
 
-      const original = new Image();
-      original.src = reader.result;
-      original.className = "preview-img";
-
       const label = document.createElement("p");
       label.textContent = file.name;
 
-      container.appendChild(label);
-      container.appendChild(original);
+      const img = document.createElement("img");
+      img.src = reader.result;
+      img.className = "preview-img";
+
+      container.append(label, img);
       preview.appendChild(container);
 
       originalPreviews.push({ file, container });
@@ -62,7 +61,7 @@ processBtn.addEventListener("click", async () => {
 
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value;
+  const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
 
   processedBlobs = [];
@@ -70,10 +69,11 @@ processBtn.addEventListener("click", async () => {
   for (const { file, container } of originalPreviews) {
     const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
 
-    const compressed = new Image();
-    compressed.src = previewURL;
-    compressed.className = "preview-img compressed";
-    container.appendChild(compressed);
+    const compressedImg = new Image();
+    compressedImg.src = previewURL;
+    compressedImg.className = "preview-img compressed";
+
+    container.appendChild(compressedImg);
 
     const baseName = file.name.replace(/\.[^/.]+$/, "");
     processedBlobs.push({ blob, name: `${baseName}.${format}` });
@@ -87,22 +87,34 @@ downloadBtn.addEventListener("click", () => {
     return;
   }
 
+  // More than 10 → ZIP
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
 
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      setTimeout(clearPreview, 1500);
+
+      // Wait before clearing to ensure ZIP triggers download
+      setTimeout(clearPreview, 2000);
     });
   } else {
+    // <= 10 → individual downloads with delay between
+    const delay = 300;
+
     processedBlobs.forEach(({ blob, name }, index) => {
       setTimeout(() => {
-        saveAs(blob, name);
-        if (index === processedBlobs.length - 1) {
-          setTimeout(clearPreview, 1000);
+        try {
+          saveAs(blob, name);
+        } catch (err) {
+          console.error("Download error:", err);
         }
-      }, index * 150);
+
+        if (index === processedBlobs.length - 1) {
+          // Clear after final file has had time to trigger
+          setTimeout(clearPreview, delay + 1000);
+        }
+      }, index * delay);
     });
   }
 });
