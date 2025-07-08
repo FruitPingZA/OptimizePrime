@@ -16,10 +16,7 @@ dropArea.addEventListener("drop", e => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
-dropArea.addEventListener("click", () => {
-  fileInput.click();
-  fileInput.value = ""; // allow re-browse
-});
+dropArea.addEventListener("click", () => fileInput.click());
 
 let filesToProcess = [];
 
@@ -50,6 +47,9 @@ function handleFiles(event) {
     };
     reader.readAsDataURL(file);
   });
+
+  // Reset file input so same files can be selected again
+  fileInput.value = "";
 }
 
 async function processImages() {
@@ -61,16 +61,16 @@ async function processImages() {
 
   for (const { file, element } of originalPreviews) {
     try {
-      const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+      const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
+
       element.appendChild(compressedImg);
-      processedBlobs.push({ blob, name });
+      processedBlobs.push({ blob, name: file.name, format });
     } catch (err) {
-      const errorLabel = document.createElement("p");
-      errorLabel.innerText = `Error compressing ${file.name}: ${err.message}`;
-      element.appendChild(errorLabel);
+      console.error("Error compressing", file.name + ":", err);
     }
   }
 }
@@ -81,54 +81,42 @@ async function downloadAll() {
     return;
   }
 
-  if (processedBlobs.length > 10) {
-    const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "optimizeprime_images.zip";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 500);
-  } else {
-    for (let i = 0; i < processedBlobs.length; i++) {
-      const { blob, name } = processedBlobs[i];
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      await new Promise(r => setTimeout(r, 500));
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+  const button = downloadAllBtn;
+  button.disabled = true;
+  button.textContent = "Downloading...";
+
+  try {
+    if (processedBlobs.length > 10) {
+      const zip = new JSZip();
+      processedBlobs.forEach(({ blob, name, format }) => {
+        const base = name.replace(/\.[^/.]+$/, "");
+        zip.file(`${base}.${format}`, blob);
+      });
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, "optimizeprime_images.zip");
+    } else {
+      for (const { blob, name, format } of processedBlobs) {
+        const base = name.replace(/\.[^/.]+$/, "");
+        const extName = `${base}.${format}`;
+        saveAs(blob, extName);
+        await new Promise(res => setTimeout(res, 150)); // Give browser time to trigger download
+      }
     }
+  } catch (err) {
+    console.error("Download failed:", err);
+    alert("Failed to download images.");
   }
 
-  showClearButton();
+  button.textContent = "Clear";
+  button.disabled = false;
+  button.onclick = clearPreview;
 }
 
-function showClearButton() {
-  if (document.getElementById("clearBtn")) return;
-
-  const clearBtn = document.createElement("button");
-  clearBtn.id = "clearBtn";
-  clearBtn.textContent = "Clear All";
-  clearBtn.style.background = "#ff5cad";
-  clearBtn.style.marginTop = "15px";
-  clearBtn.onclick = () => {
-    preview.innerHTML = "";
-    processedBlobs = [];
-    originalPreviews = [];
-    filesToProcess = [];
-    clearBtn.remove();
-  };
-  preview.appendChild(clearBtn);
+function clearPreview() {
+  preview.innerHTML = "";
+  processedBlobs = [];
+  originalPreviews = [];
+  filesToProcess = [];
+  downloadAllBtn.textContent = "Download";
+  downloadAllBtn.onclick = downloadAll;
 }
