@@ -16,9 +16,8 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 
   if (format === "avif") {
     if (typeof window.encodeAvifFromCanvas !== "function") {
-      throw new Error("AVIF encoder is not available in this browser.");
+      throw new Error("AVIF encoder not available.");
     }
-
     do {
       blob = await window.encodeAvifFromCanvas(canvas, Math.round(quality * 100));
       quality -= 0.05;
