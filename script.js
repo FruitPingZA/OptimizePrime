@@ -7,32 +7,25 @@ const downloadBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
-// Drag & Drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  if (e.dataTransfer.files.length) {
-    loadFiles(e.dataTransfer.files);
-  }
+  if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
 });
 dropArea.addEventListener("click", () => fileInput.click());
-
-// File Input
 fileInput.addEventListener("change", e => {
   if (e.target.files.length) {
     loadFiles(e.target.files);
-    fileInput.value = ""; // Reset for re-select
+    fileInput.value = "";
   }
 });
 
-// Load and preview files
 function loadFiles(fileList) {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
 
   const files = Array.from(fileList);
-
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -55,7 +48,6 @@ function loadFiles(fileList) {
   });
 }
 
-// Compress button
 processBtn.addEventListener("click", async () => {
   if (!originalPreviews.length) return;
 
@@ -63,6 +55,11 @@ processBtn.addEventListener("click", async () => {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
+
+  if (format === "avif" && !isAvifSupported()) {
+    alert("⚠️ AVIF is not supported in this browser. Please use Chrome or Firefox.");
+    return;
+  }
 
   processedBlobs = [];
 
@@ -80,7 +77,6 @@ processBtn.addEventListener("click", async () => {
   }
 });
 
-// Download button
 downloadBtn.addEventListener("click", () => {
   if (!processedBlobs.length) {
     alert("No images to download.");
@@ -90,18 +86,9 @@ downloadBtn.addEventListener("click", () => {
   downloadBtn.disabled = true;
   downloadBtn.textContent = "Downloading...";
 
-  // ✅ Create confirmation button
   const confirmBtn = document.createElement("button");
   confirmBtn.textContent = "✅ Done downloading - Clear images";
-  confirmBtn.style.marginTop = "10px";
-  confirmBtn.style.display = "block";
-  confirmBtn.style.background = "#44c767";
-  confirmBtn.style.border = "none";
-  confirmBtn.style.padding = "10px";
-  confirmBtn.style.borderRadius = "6px";
-  confirmBtn.style.color = "white";
-  confirmBtn.style.cursor = "pointer";
-
+  confirmBtn.className = "download-confirm-button";
   confirmBtn.addEventListener("click", () => {
     clearPreview();
     confirmBtn.remove();
@@ -114,7 +101,6 @@ downloadBtn.addEventListener("click", () => {
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
-
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       const link = document.createElement("a");
       link.href = URL.createObjectURL(zipBlob);
@@ -143,4 +129,9 @@ function clearPreview() {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
+}
+
+function isAvifSupported() {
+  const canvas = document.createElement("canvas");
+  return canvas.toDataURL("image/avif").startsWith("data:image/avif");
 }
