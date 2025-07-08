@@ -20,7 +20,10 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
 
     let encoded;
     do {
-      encoded = await window.avifEncode(imageData, { cqLevel: Math.round((1 - quality) * 63) });
+      encoded = await window.avifEncode(imageData, {
+        cqLevel: Math.round((1 - quality) * 63),
+        effort: 4,
+      });
       blob = new Blob([encoded.buffer], { type: "image/avif" });
       quality -= 0.05;
     } while (blob.size > targetSize && quality > 0.05);
@@ -29,28 +32,12 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
     return { blob, previewURL, name: replaceExtension(file.name, "avif") };
   }
 
-  // Standard compression using toBlob for other formats
+  // Fallback for non-AVIF formats
   do {
-    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+    blob = await new Promise((res) => canvas.toBlob(res, `image/${format}`, quality));
     quality -= 0.05;
   } while (blob && blob.size > targetSize && quality > 0.05);
 
   previewURL = URL.createObjectURL(blob);
   return { blob, previewURL, name: replaceExtension(file.name, format) };
-}
-
-function loadImageFromFile(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function replaceExtension(filename, newExt) {
-  return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
 }
