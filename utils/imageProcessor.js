@@ -1,3 +1,5 @@
+// imageProcessor.js (Fully Updated)
+
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -28,7 +30,6 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
     } while (blob && blob.size > targetSize && quality > 0.05);
   }
 
-  // Fallback check
   if (!blob || blob.size === 0) {
     throw new Error(`Compression failed for format: ${format}`);
   }
@@ -37,4 +38,20 @@ async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   name = replaceExtension(file.name, ext);
 
   return { blob, previewURL, name };
+}
+
+function loadImageFromFile(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function replaceExtension(filename, newExt) {
+  return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
 }
