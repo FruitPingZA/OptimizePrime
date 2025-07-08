@@ -7,12 +7,15 @@ const downloadBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
+// Drag & Drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
   if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
 });
 dropArea.addEventListener("click", () => fileInput.click());
+
+// File Input
 fileInput.addEventListener("change", e => {
   if (e.target.files.length) {
     loadFiles(e.target.files);
@@ -20,6 +23,7 @@ fileInput.addEventListener("change", e => {
   }
 });
 
+// Load and preview files
 function loadFiles(fileList) {
   preview.innerHTML = "";
   processedBlobs = [];
@@ -48,6 +52,7 @@ function loadFiles(fileList) {
   });
 }
 
+// Compress button
 processBtn.addEventListener("click", async () => {
   if (!originalPreviews.length) return;
 
@@ -56,9 +61,12 @@ processBtn.addEventListener("click", async () => {
   const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
 
-  if (format === "avif" && !isAvifSupported()) {
-    alert("⚠️ AVIF is not supported in this browser. Please use Chrome or Firefox.");
-    return;
+  if (format === "avif") {
+    const supported = await isAvifSupported();
+    if (!supported) {
+      alert("⚠️ AVIF is not supported in this browser. Please use Chrome or Firefox.");
+      return;
+    }
   }
 
   processedBlobs = [];
@@ -77,6 +85,7 @@ processBtn.addEventListener("click", async () => {
   }
 });
 
+// Download button
 downloadBtn.addEventListener("click", () => {
   if (!processedBlobs.length) {
     alert("No images to download.");
@@ -132,6 +141,15 @@ function clearPreview() {
 }
 
 function isAvifSupported() {
-  const canvas = document.createElement("canvas");
-  return canvas.toDataURL("image/avif").startsWith("data:image/avif");
+  return new Promise(resolve => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 2;
+    canvas.toBlob(
+      blob => {
+        resolve(blob && blob.type === "image/avif");
+      },
+      "image/avif",
+      0.5
+    );
+  });
 }
