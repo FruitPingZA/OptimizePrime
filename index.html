@@ -1,9 +1,14 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>OptimizePrime</title>
   <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { encode } from 'https://unpkg.com/@jsquash/avif@1.1.1?module';
+    window.avifEncode = encode;
+  </script>
 </head>
 <body>
   <div class="container">
