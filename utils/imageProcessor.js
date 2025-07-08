@@ -1,3 +1,5 @@
+// imageProcessor.js (with global exposure)
+
 async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -53,3 +55,8 @@ function loadImageFromFile(file) {
 function replaceExtension(filename, newExt) {
   return filename.replace(/\.[^/.]+$/, "") + "." + newExt;
 }
+
+// Expose functions globally for script.js
+window.compressImage = compressImage;
+window.loadImageFromFile = loadImageFromFile;
+window.replaceExtension = replaceExtension;
