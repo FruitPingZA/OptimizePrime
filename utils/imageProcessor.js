@@ -1,46 +1,32 @@
-async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
+export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
   const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
-  const newWidth = Math.round(img.width * scale);
-  const newHeight = Math.round(img.height * scale);
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  canvas.width = newWidth;
-  canvas.height = newHeight;
-  ctx.drawImage(img, 0, 0, newWidth, newHeight);
+  let quality = 0.95, blob;
+  do {
+    blob = await new Promise(r => canvas.toBlob(r, `image/${format}`, quality));
+    quality -= 0.05;
+  } while (blob.size > targetSize && quality > 0.05);
 
-  let quality = 0.95;
-  let blob;
-
-  if (format === "avif") {
-    if (typeof window.encodeAvifFromCanvas !== "function") {
-      throw new Error("AVIF encoder not available.");
-    }
-    do {
-      blob = await window.encodeAvifFromCanvas(canvas, Math.round(quality * 100));
-      quality -= 0.05;
-    } while (blob.size > targetSize && quality > 0.05);
-  } else {
-    do {
-      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
-      quality -= 0.05;
-    } while (blob.size > targetSize && quality > 0.05);
-  }
-
-  const previewURL = URL.createObjectURL(blob);
-  return { blob, previewURL, name: file.name };
+  return blob;
 }
 
 function loadImageFromFile(file) {
-  return new Promise(resolve => {
+  return new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = () => res(img);
+      img.onerror = rej;
       img.src = reader.result;
     };
+    reader.onerror = rej;
     reader.readAsDataURL(file);
   });
 }
