@@ -23,7 +23,6 @@ fileInput.addEventListener("change", e => {
   }
 });
 
-// Load and preview files
 function loadFiles(fileList) {
   preview.innerHTML = "";
   processedBlobs = [];
@@ -52,7 +51,6 @@ function loadFiles(fileList) {
   });
 }
 
-// Compress button
 processBtn.addEventListener("click", async () => {
   if (!originalPreviews.length) return;
 
@@ -64,20 +62,17 @@ processBtn.addEventListener("click", async () => {
   processedBlobs = [];
 
   for (const { file, container } of originalPreviews) {
-    const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+    const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
 
     const compressedImg = new Image();
     compressedImg.src = previewURL;
     compressedImg.className = "preview-img compressed";
 
     container.appendChild(compressedImg);
-
-    const baseName = file.name.replace(/\.[^/.]+$/, "");
-    processedBlobs.push({ blob, name: `${baseName}.${format}` });
+    processedBlobs.push({ blob, name });
   }
 });
 
-// Download button
 downloadBtn.addEventListener("click", () => {
   if (!processedBlobs.length) {
     alert("No images to download.");
