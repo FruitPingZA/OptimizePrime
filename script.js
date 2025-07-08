@@ -1,5 +1,3 @@
-// FINAL script.js — Fixed download behavior
-
 let processedBlobs = [];
 let originalPreviews = [];
 
