@@ -1,4 +1,4 @@
-import { compressImage } from './utils/imageProcessor.js';
+import { compressImage } from "./utils/imageProcessor.js";
 
 let processedBlobs = [];
 let originalPreviews = [];
@@ -7,12 +7,14 @@ let filesToProcess = [];
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
+const clearBtn = document.getElementById("clearBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
+clearBtn.addEventListener("click", clearPreview);
 
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
@@ -55,7 +57,7 @@ function handleFiles(event) {
 async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value;
+  const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
   processedBlobs = [];
 
@@ -68,34 +70,19 @@ async function processImages() {
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
     } catch (err) {
-      console.error("Error compressing", file.name, err);
+      console.error(`Error compressing ${file.name}:`, err);
     }
+  }
+
+  if (processedBlobs.length > 0) {
+    clearBtn.style.display = "inline-block";
   }
 }
 
 function downloadAll() {
-  if (!processedBlobs.length) {
+  if (processedBlobs.length === 0) {
     alert("No images to download.");
     return;
-  }
-
-  const existingClearBtn = document.getElementById("clearBtn");
-  if (!existingClearBtn) {
-    const clearBtn = document.createElement("button");
-    clearBtn.innerText = "Clear";
-    clearBtn.id = "clearBtn";
-    clearBtn.style.marginTop = "10px";
-    clearBtn.style.backgroundColor = "#ff5cad";
-    clearBtn.style.color = "#fff";
-    clearBtn.style.border = "none";
-    clearBtn.style.padding = "10px 20px";
-    clearBtn.style.borderRadius = "6px";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.onclick = () => {
-      clearPreview();
-      clearBtn.remove();
-    };
-    preview.appendChild(clearBtn);
   }
 
   if (processedBlobs.length > 10) {
@@ -105,8 +92,6 @@ function downloadAll() {
     });
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-    }).catch(err => {
-      console.error("Error creating zip:", err);
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
@@ -120,4 +105,5 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
+  clearBtn.style.display = "none";
 }
