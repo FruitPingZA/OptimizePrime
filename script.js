@@ -2,7 +2,6 @@ import { compressImage } from './utils/imageProcessor.js';
 
 let processedBlobs = [];
 let originalPreviews = [];
-let filesToProcess = [];
 
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
@@ -12,15 +11,16 @@ const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", handleDownloadOrClear);
+downloadAllBtn.addEventListener("click", triggerDownload);
 
-// Drag-and-drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
 dropArea.addEventListener("click", () => fileInput.click());
+
+let filesToProcess = [];
 
 function handleFiles(event) {
   filesToProcess = Array.from(event.target.files);
@@ -64,63 +64,61 @@ async function processImages() {
   for (const { file, element } of originalPreviews) {
     try {
       const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
-      if (!blob || !(blob instanceof Blob)) {
-        console.error(`Compression returned invalid blob for ${file.name}`);
-        continue;
-      }
 
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
 
+      const filename = document.createElement("p");
+      filename.innerText = name;
+
+      element.appendChild(filename);
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
-    } catch (err) {
-      console.error(`Compression failed for ${file.name}`, err);
+    } catch (error) {
+      console.error(`Compression failed for ${file.name}`, error);
     }
   }
 
-  if (processedBlobs.length === 0) {
-    alert("No images were successfully compressed.");
-  }
+  // Show "Clear All" button after compression
+  showClearButton();
 }
 
-async function handleDownloadOrClear() {
-  const isClearMode = downloadAllBtn.dataset.mode === "clear";
-
-  if (isClearMode) {
-    clearPreview();
-    return;
-  }
-
+function triggerDownload() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
 
-  try {
-    if (processedBlobs.length > 10) {
-      const zip = new JSZip();
-      processedBlobs.forEach(({ blob, name }) => {
-        zip.file(name, blob);
-      });
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) clearBtn.remove(); // avoid duplicates
 
-      const zipBlob = await zip.generateAsync({ type: "blob" });
+  if (processedBlobs.length > 10) {
+    const zip = new JSZip();
+    processedBlobs.forEach(({ blob, name }) => {
+      zip.file(name, blob);
+    });
+    zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-    } else {
-      for (const { blob, name } of processedBlobs) {
-        saveAs(blob, name);
-      }
-    }
-
-    // After successful download, allow clear
-    downloadAllBtn.textContent = "Clear";
-    downloadAllBtn.dataset.mode = "clear";
-
-  } catch (err) {
-    console.error("Download failed:", err);
-    alert("Something went wrong during download.");
+      showClearButton();
+    });
+  } else {
+    processedBlobs.forEach(({ blob, name }) => {
+      saveAs(blob, name);
+    });
+    showClearButton();
   }
+}
+
+function showClearButton() {
+  const clearBtn = document.createElement("button");
+  clearBtn.textContent = "Clear All";
+  clearBtn.id = "clearBtn";
+  clearBtn.style.backgroundColor = "#ff5cad";
+  clearBtn.style.marginTop = "15px";
+  clearBtn.style.fontWeight = "bold";
+  clearBtn.addEventListener("click", clearPreview);
+  preview.appendChild(clearBtn);
 }
 
 function clearPreview() {
@@ -128,7 +126,4 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
-
-  downloadAllBtn.textContent = "Download";
-  downloadAllBtn.dataset.mode = "download";
 }
