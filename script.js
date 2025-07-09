@@ -93,22 +93,29 @@ async function handleDownload() {
     return;
   }
 
-  const JSZip = window.JSZip;
+  const format = document.getElementById("format").value.toLowerCase();
+  const zip = new JSZip();
+
   if (processedBlobs.length > 10) {
-    const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
 
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    saveAs(zipBlob, "optimizeprime_images.zip");
+    try {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, "optimizeprime_images.zip");
+    } catch (err) {
+      console.error("Error creating zip:", err);
+    }
   } else {
     processedBlobs.forEach(({ blob, name }) => {
-      saveAs(blob, name);
+      try {
+        saveAs(blob, name);
+      } catch (err) {
+        console.error(`Failed to download ${name}`, err);
+      }
     });
   }
-
-  // Don't auto-clear; wait for user to click the button
 }
 
 function clearPreview() {
