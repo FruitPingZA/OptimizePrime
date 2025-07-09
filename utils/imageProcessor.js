@@ -1,10 +1,17 @@
-import { encode as encodeAvif, init as initAvif } from '../codecs/avif/avif_enc.js';
-import { encode as encodeWebp, init as initWebp } from '../codecs/webp/webp_enc.js';
+import { encode as encodeAvif } from '../codecs/avif/avif_wrapper.js';
+import { encode as encodeWebp } from '../codecs/webp/webp_wrapper.js';
 
-// Make sure to call init functions on page load if using Squoosh codecs
-if (initAvif) initAvif(); // If your encoder exposes init()
-if (initWebp) initWebp();
-
+/**
+ * Compresses an image file to the desired format and options.
+ * 
+ * @param {File} file - The image file to compress.
+ * @param {string} format - Target format ('avif', 'webp', 'jpeg', etc).
+ * @param {number} maxWidth - Maximum width of output image.
+ * @param {number} maxHeight - Maximum height of output image.
+ * @param {number} targetSize - Target file size in bytes.
+ * @param {number} quality - Quality (1-100), higher is better quality.
+ * @returns {Promise<{blob: Blob, previewURL: string, name: string}>}
+ */
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize, quality = 80) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -21,7 +28,6 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Squoosh's AVIF encoder accepts options like cqLevel, effort, etc.
     const avifOptions = { cqLevel: 100 - quality, effort: 4 }; // Lower cqLevel = higher quality
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
