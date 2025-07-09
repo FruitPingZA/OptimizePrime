@@ -11,24 +11,34 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  let quality = 0.95;
   let blob;
+  let quality = 0.95;
+  const mimeType = getMimeType(format);
 
-  // Try compress loop (standard browsers)
-  do {
-    blob = await new Promise((res) =>
-      canvas.toBlob(res, `image/${format}`, quality)
-    );
-    quality -= 0.05;
-  } while (blob && blob.size > targetSize && quality > 0.05);
-
-  if (!blob) {
-    throw new Error("Compression failed: could not generate blob.");
+  if (format === "avif") {
+    try {
+      const avifModule = await import("../codecs/avif/avif_enc.js");
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const encoded = avifModule.encode(imageData.data, canvas.width, canvas.height, { quality: 50 });
+      blob = new Blob([encoded.buffer], { type: mimeType });
+    } catch (e) {
+      console.error("AVIF compression failed:", e);
+      throw e;
+    }
+  } else {
+    do {
+      blob = await new Promise((res) =>
+        canvas.toBlob(res, mimeType, quality)
+      );
+      quality -= 0.05;
+    } while (blob && blob.size > targetSize && quality > 0.05);
   }
 
+  if (!blob) throw new Error("Compression failed, no blob generated.");
+
   const previewURL = URL.createObjectURL(blob);
-  const outputName = file.name.replace(/\.[^/.]+$/, `.${format}`);
-  return { blob, previewURL, name: outputName };
+  const name = file.name.replace(/\.[^/.]+$/, `.${format}`);
+  return { blob, previewURL, name };
 }
 
 function loadImageFromFile(file) {
@@ -41,4 +51,20 @@ function loadImageFromFile(file) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+function getMimeType(format) {
+  switch (format.toLowerCase()) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "avif":
+      return "image/avif";
+    default:
+      return "image/png";
+  }
 }
