@@ -1,8 +1,3 @@
-import { encode as avifEncode } from '../codecs/avif/avif_enc.js';
-import { encode as webpEncode } from '../codecs/webp/webp_enc.js';
-import { encode as mozjpegEncode } from '../codecs/mozjpeg/mozjpeg_enc.js';
-import { encode as imageQuant } from '../codecs/imagequant/imagequant.js';
-
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -16,42 +11,33 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  let blob;
-  let buffer;
-  let quality = 75;
+  let blob, previewURL;
 
   if (format === "avif") {
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    buffer = avifEncode(imageData.data, newWidth, newHeight, { quality });
-    blob = new Blob([buffer], { type: 'image/avif' });
+    const avifModule = await import("../codecs/avif/avif_enc.js");
+    const avifEncoder = await avifModule.default();
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  } else if (format === "webp") {
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    buffer = webpEncode(imageData.data, newWidth, newHeight, { quality });
-    blob = new Blob([buffer], { type: 'image/webp' });
+    const encoded = avifEncoder.encode(imageData.data, imageData.width, imageData.height, {
+      quality: 75,
+      effort: 4
+    });
 
-  } else if (format === "jpeg" || format === "jpg") {
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    buffer = mozjpegEncode(imageData.data, newWidth, newHeight, { quality });
-    blob = new Blob([buffer], { type: 'image/jpeg' });
-
-  } else if (format === "png") {
-    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const quant = imageQuant(imageData.data, newWidth, newHeight);
-    blob = new Blob([quant.buffer], { type: 'image/png' });
-
+    blob = new Blob([encoded.buffer], { type: "image/avif" });
+    previewURL = URL.createObjectURL(blob);
   } else {
-    // fallback to canvas.toBlob if format is unsupported
-    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`));
+    let quality = 0.95;
+    do {
+      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+      quality -= 0.05;
+    } while (blob && blob.size > targetSize && quality > 0.05);
+    previewURL = URL.createObjectURL(blob);
   }
-
-  const previewURL = URL.createObjectURL(blob);
-  const ext = format === "jpg" ? "jpeg" : format;
 
   return {
     blob,
     previewURL,
-    name: file.name.replace(/\.[^/.]+$/, `.${ext}`)
+    name: file.name.replace(/\.[^/.]+$/, `.${format}`)
   };
 }
 
