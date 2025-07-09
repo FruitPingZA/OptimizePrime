@@ -70,21 +70,13 @@ async function processImages() {
 
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
-
     } catch (err) {
-      console.error("Error compressing", file.name, err);
+      console.error(`Error compressing ${file.name}:`, err);
     }
   }
 
-  // Add "Clear" button only once
-  if (!document.getElementById("clearBtn")) {
-    const clearBtn = document.createElement("button");
-    clearBtn.textContent = "Clear";
-    clearBtn.id = "clearBtn";
-    clearBtn.style.marginLeft = "10px";
-    clearBtn.onclick = () => clearPreview();
-    downloadAllBtn.parentElement.appendChild(clearBtn);
-  }
+  // Show "Clear" button after processing
+  showClearButton();
 }
 
 function downloadAll() {
@@ -93,9 +85,7 @@ function downloadAll() {
     return;
   }
 
-  const zipThreshold = 10;
-
-  if (processedBlobs.length > zipThreshold) {
+  if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
@@ -108,4 +98,27 @@ function downloadAll() {
       saveAs(blob, name);
     });
   }
+
+  // Do not clear immediately. Wait for user to press "Clear"
+}
+
+function showClearButton() {
+  // Avoid duplicates
+  if (document.getElementById("clearBtn")) return;
+
+  const clearBtn = document.createElement("button");
+  clearBtn.id = "clearBtn";
+  clearBtn.innerText = "Clear";
+  clearBtn.style.backgroundColor = "#ff5cad";
+  clearBtn.style.marginTop = "10px";
+  clearBtn.addEventListener("click", clearPreview);
+
+  preview.appendChild(clearBtn);
+}
+
+function clearPreview() {
+  preview.innerHTML = "";
+  processedBlobs = [];
+  originalPreviews = [];
+  filesToProcess = [];
 }
