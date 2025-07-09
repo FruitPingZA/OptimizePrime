@@ -1,3 +1,5 @@
+import { encode as encodeAvif } from '../codecs/avif/avif_enc.js';
+
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement('canvas');
@@ -12,22 +14,20 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
   if (format === 'avif') {
-    const avifEncoder = await import('../codecs/avif/avif_enc.js');
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const rgba = imageData.data;
-
-    // Try compressing with increasing quality until below targetSize
-    let quality = 30;
-    let blob = null;
-
-    while (quality <= 70) {
-      const avifData = avifEncoder.encode(rgba, newWidth, newHeight, { cqLevel: quality, effort: 6 });
-      blob = new Blob([avifData], { type: 'image/avif' });
-
-      if (blob.size <= targetSize) break;
-      quality += 5;
+    let cqLevel = 30;
+    let avifData;
+    while (cqLevel <= 63) {
+      avifData = await encodeAvif(imageData.data, newWidth, newHeight, {
+        cqLevel,
+        effort: 8,
+        subsample: 1
+      });
+      const size = avifData.byteLength;
+      if (size <= targetSize) break;
+      cqLevel += 3;
     }
-
+    const blob = new Blob([avifData], { type: 'image/avif' });
     const previewURL = URL.createObjectURL(blob);
     return {
       blob,
@@ -36,12 +36,12 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     };
   }
 
-  // fallback for other formats (webp, jpeg, png)
+  // Fallback for webp, jpeg, png
   let quality = 0.95;
   let blob;
 
   do {
-    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+    blob = await new Promise((res) => canvas.toBlob(res, `image/${format}`, quality));
     quality -= 0.05;
   } while (blob && blob.size > targetSize && quality > 0.05);
 
@@ -54,7 +54,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
 }
 
 function loadImageFromFile(file) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
