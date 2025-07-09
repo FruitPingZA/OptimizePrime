@@ -12,9 +12,9 @@ const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", downloadAll);
+downloadAllBtn.addEventListener("click", handleDownloadOrClear);
 
-// Drag-and-drop
+// Enable drag & drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -58,6 +58,7 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
+
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
@@ -76,41 +77,40 @@ async function processImages() {
   }
 }
 
-async function downloadAll() {
+async function handleDownloadOrClear() {
+  const isClearMode = downloadAllBtn.dataset.mode === "clear";
+
+  if (isClearMode) {
+    clearPreview();
+    return;
+  }
+
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
 
-  if (processedBlobs.length > 10) {
-    const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
-
-    try {
+  try {
+    if (processedBlobs.length > 10) {
+      const zip = new JSZip();
+      processedBlobs.forEach(({ blob, name }) => {
+        zip.file(name, blob);
+      });
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "optimizeprime_images.zip");
-      showClearButton();
-    } catch (err) {
-      console.error("ZIP download failed:", err);
-    }
-  } else {
-    try {
+    } else {
       for (const { blob, name } of processedBlobs) {
         saveAs(blob, name);
       }
-      showClearButton();
-    } catch (err) {
-      console.error("Direct download failed:", err);
     }
-  }
-}
 
-function showClearButton() {
-  downloadAllBtn.textContent = "Clear";
-  downloadAllBtn.removeEventListener("click", downloadAll);
-  downloadAllBtn.addEventListener("click", clearPreview);
+    // Wait for download to complete, then change to Clear
+    downloadAllBtn.textContent = "Clear";
+    downloadAllBtn.dataset.mode = "clear";
+
+  } catch (err) {
+    console.error("Download failed", err);
+  }
 }
 
 function clearPreview() {
@@ -118,7 +118,7 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
+
   downloadAllBtn.textContent = "Download";
-  downloadAllBtn.removeEventListener("click", clearPreview);
-  downloadAllBtn.addEventListener("click", downloadAll);
+  downloadAllBtn.dataset.mode = "download";
 }
