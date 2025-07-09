@@ -8,23 +8,20 @@ const preview = document.getElementById("preview");
 
 let processedImages = [];
 
+// UI events
 dropArea.addEventListener("click", () => fileInput.click());
-
 dropArea.addEventListener("dragover", e => {
   e.preventDefault();
   dropArea.classList.add("dragover");
 });
-
 dropArea.addEventListener("dragleave", () => {
   dropArea.classList.remove("dragover");
 });
-
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
   dropArea.classList.remove("dragover");
   handleFiles(e.dataTransfer.files);
 });
-
 fileInput.addEventListener("change", e => {
   handleFiles(e.target.files);
 });
@@ -41,15 +38,17 @@ processBtn.addEventListener("click", async () => {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
+  const quality = parseInt(document.getElementById("quality").value);
 
   for (let imgObj of processedImages) {
     try {
-      const result = await compressImage(imgObj.original, format, maxWidth, maxHeight, targetSize);
+      const result = await compressImage(imgObj.original, format, maxWidth, maxHeight, targetSize, quality);
       imgObj.blob = result.blob;
       imgObj.previewURL = result.previewURL;
       imgObj.name = result.name;
     } catch (e) {
       console.error("Error compressing", imgObj.original.name, e);
+      alert(`Error compressing ${imgObj.original.name}: ${e.message}`);
     }
   }
 
@@ -74,7 +73,7 @@ downloadAllBtn.addEventListener("click", () => {
 
   const zip = new JSZip();
   processedImages.forEach(({ blob, name }) => {
-    zip.file(name, blob);
+    if (blob && name) zip.file(name, blob);
   });
 
   zip.generateAsync({ type: "blob" }).then(content => {
