@@ -7,8 +7,8 @@ let filesToProcess = [];
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
-const preview = document.getElementById("preview");
 const dropArea = document.getElementById("dropArea");
+const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
@@ -57,7 +57,6 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
@@ -66,32 +65,11 @@ async function processImages() {
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
-
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
     } catch (err) {
-      console.error(`Error compressing ${file.name}:`, err);
+      console.error("Error compressing", file.name, err);
     }
-  }
-
-  showClearButton();
-}
-
-function showClearButton() {
-  let clearBtn = document.getElementById("clearBtn");
-  if (!clearBtn) {
-    clearBtn = document.createElement("button");
-    clearBtn.textContent = "Clear All";
-    clearBtn.id = "clearBtn";
-    clearBtn.style.marginLeft = "10px";
-    clearBtn.style.background = "#ff5cad";
-    clearBtn.style.color = "white";
-    clearBtn.style.borderRadius = "6px";
-    clearBtn.style.border = "none";
-    clearBtn.style.padding = "10px 20px";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.addEventListener("click", clearPreview);
-    document.querySelector(".controls").appendChild(clearBtn);
   }
 }
 
@@ -101,14 +79,34 @@ function downloadAll() {
     return;
   }
 
+  const existingClearBtn = document.getElementById("clearBtn");
+  if (!existingClearBtn) {
+    const clearBtn = document.createElement("button");
+    clearBtn.innerText = "Clear";
+    clearBtn.id = "clearBtn";
+    clearBtn.style.marginTop = "10px";
+    clearBtn.style.backgroundColor = "#ff5cad";
+    clearBtn.style.color = "#fff";
+    clearBtn.style.border = "none";
+    clearBtn.style.padding = "10px 20px";
+    clearBtn.style.borderRadius = "6px";
+    clearBtn.style.cursor = "pointer";
+    clearBtn.onclick = () => {
+      clearPreview();
+      clearBtn.remove();
+    };
+    preview.appendChild(clearBtn);
+  }
+
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
-
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
+    }).catch(err => {
+      console.error("Error creating zip:", err);
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
@@ -116,13 +114,10 @@ function downloadAll() {
     });
   }
 }
-  
+
 function clearPreview() {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
-
-  const clearBtn = document.getElementById("clearBtn");
-  if (clearBtn) clearBtn.remove();
 }
