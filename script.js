@@ -2,19 +2,18 @@ import { compressImage } from './utils/imageProcessor.js';
 
 let processedBlobs = [];
 let originalPreviews = [];
+
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
-const clearAllBtn = document.getElementById("clearAllBtn");
+const clearBtn = document.getElementById("clearBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
-let filesToProcess = [];
-
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", handleDownloadAll);
-clearAllBtn.addEventListener("click", clearPreview);
+downloadAllBtn.addEventListener("click", downloadAll);
+clearBtn.addEventListener("click", clearPreview);
 
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
@@ -23,11 +22,14 @@ dropArea.addEventListener("drop", e => {
 });
 dropArea.addEventListener("click", () => fileInput.click());
 
+let filesToProcess = [];
+
 function handleFiles(event) {
   filesToProcess = Array.from(event.target.files);
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
+  clearBtn.style.display = "none";
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
@@ -59,23 +61,26 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
+
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
     try {
       const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
+
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
-    } catch (error) {
-      console.error("Error compressing", file.name, error);
+    } catch (err) {
+      console.error(`Error compressing ${file.name}:`, err);
     }
   }
 }
 
-function handleDownloadAll() {
+function downloadAll() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
@@ -83,16 +88,23 @@ function handleDownloadAll() {
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => zip.file(name, blob));
+    processedBlobs.forEach(({ blob, name }) => {
+      zip.file(name, blob);
+    });
+
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      clearAllBtn.style.display = "inline-block";
+      clearBtn.style.display = "inline-block";
     });
   } else {
-    processedBlobs.forEach(({ blob, name }, index) => {
-      setTimeout(() => saveAs(blob, name), index * 100);
+    let completed = 0;
+    processedBlobs.forEach(({ blob, name }) => {
+      saveAs(blob, name);
+      completed++;
+      if (completed === processedBlobs.length) {
+        clearBtn.style.display = "inline-block";
+      }
     });
-    clearAllBtn.style.display = "inline-block";
   }
 }
 
@@ -101,5 +113,5 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
-  clearAllBtn.style.display = "none";
+  clearBtn.style.display = "none";
 }
