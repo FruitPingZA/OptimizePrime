@@ -6,16 +6,13 @@ let originalPreviews = [];
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
-const clearBtn = document.getElementById("clearBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", downloadAll);
-clearBtn.addEventListener("click", clearPreview);
+downloadAllBtn.addEventListener("click", handleDownloadAll);
 
-// Enable drag-drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -30,7 +27,6 @@ function handleFiles(event) {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
-  clearBtn.style.display = "none";
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
@@ -54,7 +50,7 @@ function handleFiles(event) {
     reader.readAsDataURL(file);
   });
 
-  fileInput.value = ""; // Reset input
+  fileInput.value = "";
 }
 
 async function processImages() {
@@ -62,12 +58,12 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
+
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
     try {
       const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
-
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
@@ -75,20 +71,24 @@ async function processImages() {
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
     } catch (err) {
-      console.error(`Error compressing ${file.name}:`, err);
+      console.error("Error compressing", file.name, ":", err);
     }
-  }
-
-  if (processedBlobs.length) {
-    clearBtn.style.display = "inline-block";
   }
 }
 
-function downloadAll() {
+function handleDownloadAll() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
+
+  // Add a clear button
+  const clearBtn = document.createElement("button");
+  clearBtn.textContent = "Clear";
+  clearBtn.className = "clear-btn";
+  clearBtn.style.marginLeft = "10px";
+  clearBtn.onclick = clearPreview;
+  downloadAllBtn.insertAdjacentElement("afterend", clearBtn);
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -97,13 +97,11 @@ function downloadAll() {
     });
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      clearBtn.style.display = "inline-block";
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
       saveAs(blob, name);
     });
-    clearBtn.style.display = "inline-block";
   }
 }
 
@@ -112,5 +110,6 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
-  clearBtn.style.display = "none";
+  const clearBtn = document.querySelector(".clear-btn");
+  if (clearBtn) clearBtn.remove();
 }
