@@ -14,7 +14,7 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", handleDownloadOrClear);
 
-// Enable drag & drop
+// Drag-and-drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -64,6 +64,10 @@ async function processImages() {
   for (const { file, element } of originalPreviews) {
     try {
       const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+      if (!blob || !(blob instanceof Blob)) {
+        console.error(`Compression returned invalid blob for ${file.name}`);
+        continue;
+      }
 
       const compressedImg = new Image();
       compressedImg.src = previewURL;
@@ -74,6 +78,10 @@ async function processImages() {
     } catch (err) {
       console.error(`Compression failed for ${file.name}`, err);
     }
+  }
+
+  if (processedBlobs.length === 0) {
+    alert("No images were successfully compressed.");
   }
 }
 
@@ -96,6 +104,7 @@ async function handleDownloadOrClear() {
       processedBlobs.forEach(({ blob, name }) => {
         zip.file(name, blob);
       });
+
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "optimizeprime_images.zip");
     } else {
@@ -104,12 +113,13 @@ async function handleDownloadOrClear() {
       }
     }
 
-    // Wait for download to complete, then change to Clear
+    // After successful download, allow clear
     downloadAllBtn.textContent = "Clear";
     downloadAllBtn.dataset.mode = "clear";
 
   } catch (err) {
-    console.error("Download failed", err);
+    console.error("Download failed:", err);
+    alert("Something went wrong during download.");
   }
 }
 
