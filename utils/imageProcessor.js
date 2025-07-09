@@ -1,3 +1,8 @@
+import { encode as avifEncode } from '../codecs/avif/avif_enc.js';
+import { encode as webpEncode } from '../codecs/webp/webp_enc.js';
+import { encode as mozjpegEncode } from '../codecs/mozjpeg/mozjpeg_enc.js';
+import { encode as imageQuant } from '../codecs/imagequant/imagequant.js';
+
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -12,39 +17,46 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
   let blob;
-  let quality = 0.95;
-  const mimeType = getMimeType(format);
+  let buffer;
+  let quality = 75;
 
   if (format === "avif") {
-    try {
-      const avifModule = await import("../codecs/avif/avif_enc.js");
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const encoded = avifModule.encode(imageData.data, canvas.width, canvas.height, {
-        quality: 60,
-      });
-      blob = new Blob([encoded.buffer], { type: mimeType });
-    } catch (err) {
-      console.error("AVIF compression error:", err);
-      throw err;
-    }
+    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    buffer = avifEncode(imageData.data, newWidth, newHeight, { quality });
+    blob = new Blob([buffer], { type: 'image/avif' });
+
+  } else if (format === "webp") {
+    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    buffer = webpEncode(imageData.data, newWidth, newHeight, { quality });
+    blob = new Blob([buffer], { type: 'image/webp' });
+
+  } else if (format === "jpeg" || format === "jpg") {
+    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    buffer = mozjpegEncode(imageData.data, newWidth, newHeight, { quality });
+    blob = new Blob([buffer], { type: 'image/jpeg' });
+
+  } else if (format === "png") {
+    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    const quant = imageQuant(imageData.data, newWidth, newHeight);
+    blob = new Blob([quant.buffer], { type: 'image/png' });
+
   } else {
-    do {
-      blob = await new Promise((resolve) =>
-        canvas.toBlob(resolve, mimeType, quality)
-      );
-      quality -= 0.05;
-    } while (blob && blob.size > targetSize && quality > 0.05);
+    // fallback to canvas.toBlob if format is unsupported
+    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`));
   }
 
-  if (!blob) throw new Error("Compression failed. Blob is null.");
-
   const previewURL = URL.createObjectURL(blob);
-  const name = file.name.replace(/\.[^/.]+$/, `.${format}`);
-  return { blob, previewURL, name };
+  const ext = format === "jpg" ? "jpeg" : format;
+
+  return {
+    blob,
+    previewURL,
+    name: file.name.replace(/\.[^/.]+$/, `.${ext}`)
+  };
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
@@ -53,20 +65,4 @@ function loadImageFromFile(file) {
     };
     reader.readAsDataURL(file);
   });
-}
-
-function getMimeType(format) {
-  switch (format.toLowerCase()) {
-    case "jpeg":
-    case "jpg":
-      return "image/jpeg";
-    case "png":
-      return "image/png";
-    case "webp":
-      return "image/webp";
-    case "avif":
-      return "image/avif";
-    default:
-      return "image/png";
-  }
 }
