@@ -2,6 +2,7 @@ import { compressImage } from './utils/imageProcessor.js';
 
 let processedBlobs = [];
 let originalPreviews = [];
+let filesToProcess = [];
 
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
@@ -13,14 +14,13 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
+// Drag-and-drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
 dropArea.addEventListener("click", () => fileInput.click());
-
-let filesToProcess = [];
 
 function handleFiles(event) {
   filesToProcess = Array.from(event.target.files);
@@ -61,17 +61,18 @@ async function processImages() {
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
-    const result = await compressImage(file, format, maxWidth, maxHeight, targetSize);
-    if (!result) continue;
+    try {
+      const { blob, previewURL, name } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
 
-    const { blob, previewURL, name } = result;
+      const compressedImg = new Image();
+      compressedImg.src = previewURL;
+      compressedImg.className = "preview-img compressed";
 
-    const compressedImg = new Image();
-    compressedImg.src = previewURL;
-    compressedImg.className = "preview-img compressed";
-
-    element.appendChild(compressedImg);
-    processedBlobs.push({ blob, name });
+      element.appendChild(compressedImg);
+      processedBlobs.push({ blob, name });
+    } catch (err) {
+      console.error(`Compression failed for ${file.name}`, err);
+    }
   }
 }
 
@@ -81,14 +82,6 @@ function downloadAll() {
     return;
   }
 
-  const clearButton = document.createElement("button");
-  clearButton.innerText = "Clear";
-  clearButton.style.backgroundColor = "#ff5cad";
-  clearButton.style.marginTop = "10px";
-  clearButton.onclick = clearPreview;
-
-  preview.appendChild(clearButton);
-
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
@@ -97,10 +90,16 @@ function downloadAll() {
 
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
+      clearPreview();
     });
   } else {
+    let completed = 0;
     processedBlobs.forEach(({ blob, name }) => {
       saveAs(blob, name);
+      completed++;
+      if (completed === processedBlobs.length) {
+        setTimeout(() => clearPreview(), 1000);
+      }
     });
   }
 }
