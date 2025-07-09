@@ -1,14 +1,13 @@
-// Assumes compressImage is loaded globally from imageProcessor.js
+import { compressImage } from './utils/imageProcessor.js';
+
+let processedBlobs = [];
+let originalPreviews = [];
 
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
-
-let filesToProcess = [];
-let processedBlobs = [];
-let originalPreviews = [];
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
@@ -20,6 +19,8 @@ dropArea.addEventListener("drop", e => {
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
 dropArea.addEventListener("click", () => fileInput.click());
+
+let filesToProcess = [];
 
 function handleFiles(event) {
   filesToProcess = Array.from(event.target.files);
@@ -57,98 +58,56 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
-    try {
-      const { blob, previewURL } = await compressImage(file, format, maxWidth, maxHeight, targetSize);
-      const compressedImg = new Image();
-      compressedImg.src = previewURL;
-      compressedImg.className = "preview-img compressed";
+    const result = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+    if (!result) continue;
 
-      element.appendChild(compressedImg);
+    const { blob, previewURL, name } = result;
 
-      const baseName = file.name.replace(/\.[^/.]+$/, "");
-      processedBlobs.push({ blob, name: `${baseName}.${format}` });
-    } catch (err) {
-      console.error(`Error compressing ${file.name}:`, err);
-    }
+    const compressedImg = new Image();
+    compressedImg.src = previewURL;
+    compressedImg.className = "preview-img compressed";
+
+    element.appendChild(compressedImg);
+    processedBlobs.push({ blob, name });
   }
 }
 
-async function downloadAll() {
+function downloadAll() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
 
+  const clearButton = document.createElement("button");
+  clearButton.innerText = "Clear";
+  clearButton.style.backgroundColor = "#ff5cad";
+  clearButton.style.marginTop = "10px";
+  clearButton.onclick = clearPreview;
+
+  preview.appendChild(clearButton);
+
   if (processedBlobs.length > 10) {
-    try {
-      const zip = new JSZip();
-      processedBlobs.forEach(({ blob, name }) => {
-        zip.file(name, blob);
-      });
+    const zip = new JSZip();
+    processedBlobs.forEach(({ blob, name }) => {
+      zip.file(name, blob);
+    });
 
-      const zipBlob = await zip.generateAsync({ type: "blob" });
-      const zipURL = URL.createObjectURL(zipBlob);
-      const a = document.createElement("a");
-      a.href = zipURL;
-      a.download = "optimizeprime_images.zip";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-
-      setTimeout(() => {
-        URL.revokeObjectURL(zipURL);
-        document.body.removeChild(a);
-        showClearButton();
-      }, 1000);
-    } catch (err) {
-      console.error("ZIP creation failed:", err);
-      alert("Failed to generate ZIP.");
-    }
+    zip.generateAsync({ type: "blob" }).then(zipBlob => {
+      saveAs(zipBlob, "optimizeprime_images.zip");
+    });
   } else {
-    for (const { blob, name } of processedBlobs) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      await new Promise(res => setTimeout(res, 300));
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-    showClearButton();
+    processedBlobs.forEach(({ blob, name }) => {
+      saveAs(blob, name);
+    });
   }
 }
 
-function showClearButton() {
-  if (!document.getElementById("clearBtn")) {
-    const clearBtn = document.createElement("button");
-    clearBtn.id = "clearBtn";
-    clearBtn.textContent = "Clear";
-    clearBtn.style.marginTop = "10px";
-    clearBtn.style.background = "#ff5cad";
-    clearBtn.style.border = "none";
-    clearBtn.style.padding = "10px 20px";
-    clearBtn.style.color = "#fff";
-    clearBtn.style.fontWeight = "bold";
-    clearBtn.style.borderRadius = "6px";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.addEventListener("click", clearAll);
-
-    document.querySelector(".controls").appendChild(clearBtn);
-  }
-}
-
-function clearAll() {
+function clearPreview() {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
-
-  const clearBtn = document.getElementById("clearBtn");
-  if (clearBtn) clearBtn.remove();
 }
