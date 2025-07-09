@@ -1,36 +1,34 @@
-import { compressImage } from './utils/imageProcessor.js';
+import { compressImage } from "./utils/imageProcessor.js";
 
+let filesToProcess = [];
 let processedBlobs = [];
 let originalPreviews = [];
 
 const fileInput = document.getElementById("fileInput");
-const processBtn = document.getElementById("processBtn");
-const downloadAllBtn = document.getElementById("downloadAllBtn");
 const dropArea = document.getElementById("dropArea");
+const processBtn = document.getElementById("processBtn");
+const downloadBtn = document.getElementById("downloadAllBtn");
 const preview = document.getElementById("preview");
 
-fileInput.addEventListener("change", handleFiles);
-processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", downloadAll);
-
-dropArea.addEventListener("dragover", e => e.preventDefault());
-dropArea.addEventListener("drop", e => {
+dropArea.addEventListener("dragover", (e) => e.preventDefault());
+dropArea.addEventListener("drop", (e) => {
   e.preventDefault();
-  handleFiles({ target: { files: e.dataTransfer.files } });
+  handleFiles(e.dataTransfer.files);
 });
 dropArea.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+processBtn.addEventListener("click", processImages);
+downloadBtn.addEventListener("click", handleDownload);
 
-let filesToProcess = [];
-
-function handleFiles(event) {
-  filesToProcess = Array.from(event.target.files);
+function handleFiles(fileList) {
+  filesToProcess = Array.from(fileList);
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       const container = document.createElement("div");
       container.className = "image-container";
 
@@ -45,7 +43,7 @@ function handleFiles(event) {
       container.appendChild(originalImg);
       preview.appendChild(container);
 
-      originalPreviews.push({ index, file, element: container });
+      originalPreviews.push({ file, element: container });
     };
     reader.readAsDataURL(file);
   });
@@ -69,27 +67,45 @@ async function processImages() {
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
 
-      const label = document.createElement("p");
-      label.innerText = `Compressed: ${name}`;
-
-      element.appendChild(label);
       element.appendChild(compressedImg);
-
       processedBlobs.push({ blob, name });
     } catch (err) {
       console.error(`Error compressing ${file.name}:`, err);
     }
   }
+
+  addClearButtonOnce();
 }
 
-async function downloadAll() {
+function addClearButtonOnce() {
+  if (!document.getElementById("clearBtn")) {
+    const clearBtn = document.createElement("button");
+    clearBtn.textContent = "Clear All";
+    clearBtn.id = "clearBtn";
+    clearBtn.style.marginTop = "20px";
+    clearBtn.style.background = "#ff5cad";
+    clearBtn.style.color = "#fff";
+    clearBtn.style.border = "none";
+    clearBtn.style.padding = "10px 20px";
+    clearBtn.style.borderRadius = "5px";
+    clearBtn.style.cursor = "pointer";
+    clearBtn.addEventListener("click", clearAll);
+    preview.appendChild(clearBtn);
+  }
+}
+
+function clearAll() {
+  preview.innerHTML = "";
+  filesToProcess = [];
+  processedBlobs = [];
+  originalPreviews = [];
+}
+
+function handleDownload() {
   if (!processedBlobs.length) {
-    alert("No images to download.");
+    alert("No compressed images to download.");
     return;
   }
-
-  // Only add one clear button
-  if (!document.getElementById("clearBtn")) showClearButton();
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -97,35 +113,15 @@ async function downloadAll() {
       zip.file(name, blob);
     });
 
-    try {
-      const zipBlob = await zip.generateAsync({ type: "blob" });
+    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-    } catch (error) {
-      console.error("ZIP creation failed:", error);
-    }
+    });
   } else {
-    for (const { blob, name } of processedBlobs) {
-      try {
-        saveAs(blob, name);
-        await new Promise(res => setTimeout(res, 200)); // small delay
-      } catch (error) {
-        console.error("Download failed:", error);
-      }
-    }
+    processedBlobs.forEach(({ blob, name }) => {
+      saveAs(blob, name);
+    });
   }
-}
 
-function showClearButton() {
-  const clearBtn = document.createElement("button");
-  clearBtn.innerText = "Clear All";
-  clearBtn.id = "clearBtn";
-  clearBtn.style.backgroundColor = "#ff5cad";
-  clearBtn.style.marginTop = "15px";
-  clearBtn.addEventListener("click", () => {
-    preview.innerHTML = "";
-    processedBlobs = [];
-    originalPreviews = [];
-    filesToProcess = [];
-  });
-  preview.appendChild(clearBtn);
+  // Only show clear button, do NOT clear automatically
+  addClearButtonOnce();
 }
