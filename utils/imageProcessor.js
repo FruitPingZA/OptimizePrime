@@ -1,3 +1,5 @@
+// utils/imageProcessor.js
+
 import { encode as encodeAvif } from '../codecs/avif/avif_enc.js';
 
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
@@ -17,16 +19,25 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
     let cqLevel = 30;
     let avifData;
+
     while (cqLevel <= 63) {
-      avifData = await encodeAvif(imageData.data, newWidth, newHeight, {
-        cqLevel,
-        effort: 8,
-        subsample: 1
-      });
-      const size = avifData.byteLength;
-      if (size <= targetSize) break;
+      try {
+        avifData = await encodeAvif(imageData.data, newWidth, newHeight, {
+          cqLevel,
+          effort: 8,
+          subsample: 1,
+        });
+      } catch (err) {
+        console.error("AVIF encode error:", err);
+        break;
+      }
+
+      if (avifData.byteLength <= targetSize) break;
       cqLevel += 3;
     }
+
+    if (!avifData) throw new Error("Failed to encode AVIF.");
+
     const blob = new Blob([avifData], { type: 'image/avif' });
     const previewURL = URL.createObjectURL(blob);
     return {
@@ -36,7 +47,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     };
   }
 
-  // Fallback for webp, jpeg, png
+  // fallback for other formats
   let quality = 0.95;
   let blob;
 
@@ -44,6 +55,8 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     blob = await new Promise((res) => canvas.toBlob(res, `image/${format}`, quality));
     quality -= 0.05;
   } while (blob && blob.size > targetSize && quality > 0.05);
+
+  if (!blob) throw new Error("Failed to compress image.");
 
   const previewURL = URL.createObjectURL(blob);
   return {
@@ -54,13 +67,15 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Image failed to load."));
       img.src = reader.result;
     };
+    reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
 }
