@@ -26,7 +26,7 @@ function handleFiles(fileList) {
   processedBlobs = [];
   originalPreviews = [];
 
-  filesToProcess.forEach((file, index) => {
+  filesToProcess.forEach((file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const container = document.createElement("div");
@@ -74,10 +74,41 @@ async function processImages() {
     }
   }
 
-  addClearButtonOnce();
+  showClearButton();
 }
 
-function addClearButtonOnce() {
+function handleDownload() {
+  if (!processedBlobs.length) {
+    alert("No images to download.");
+    return;
+  }
+
+  if (processedBlobs.length > 10) {
+    const zip = new JSZip();
+    processedBlobs.forEach(({ blob, name }) => {
+      zip.file(name, blob);
+    });
+    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
+      saveAs(zipBlob, "optimizeprime_images.zip");
+    });
+  } else {
+    processedBlobs.forEach(({ blob, name }) => {
+      // Explicitly create a temporary anchor to force download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  showClearButton();
+}
+
+function showClearButton() {
   if (!document.getElementById("clearBtn")) {
     const clearBtn = document.createElement("button");
     clearBtn.textContent = "Clear All";
@@ -89,39 +120,12 @@ function addClearButtonOnce() {
     clearBtn.style.padding = "10px 20px";
     clearBtn.style.borderRadius = "5px";
     clearBtn.style.cursor = "pointer";
-    clearBtn.addEventListener("click", clearAll);
+    clearBtn.addEventListener("click", () => {
+      preview.innerHTML = "";
+      filesToProcess = [];
+      processedBlobs = [];
+      originalPreviews = [];
+    });
     preview.appendChild(clearBtn);
   }
-}
-
-function clearAll() {
-  preview.innerHTML = "";
-  filesToProcess = [];
-  processedBlobs = [];
-  originalPreviews = [];
-}
-
-function handleDownload() {
-  if (!processedBlobs.length) {
-    alert("No compressed images to download.");
-    return;
-  }
-
-  if (processedBlobs.length > 10) {
-    const zip = new JSZip();
-    processedBlobs.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
-
-    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
-      saveAs(zipBlob, "optimizeprime_images.zip");
-    });
-  } else {
-    processedBlobs.forEach(({ blob, name }) => {
-      saveAs(blob, name);
-    });
-  }
-
-  // Only show clear button, do NOT clear automatically
-  addClearButtonOnce();
 }
