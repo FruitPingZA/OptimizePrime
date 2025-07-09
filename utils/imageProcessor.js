@@ -1,7 +1,11 @@
-import { encode as encodeAvif } from '../codecs/avif/avif_enc.js';
-import { encode as encodeWebp } from '../codecs/webp/webp_enc.js';
+import { encode as encodeAvif, init as initAvif } from '../codecs/avif/avif_enc.js';
+import { encode as encodeWebp, init as initWebp } from '../codecs/webp/webp_enc.js';
 
-export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
+// Make sure to call init functions on page load if using Squoosh codecs
+if (initAvif) initAvif(); // If your encoder exposes init()
+if (initWebp) initWebp();
+
+export async function compressImage(file, format, maxWidth, maxHeight, targetSize, quality = 80) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -17,18 +21,22 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const encoded = encodeAvif(imageData.data, newWidth, newHeight, 75); // quality 75
-    blob = new Blob([encoded], { type: "image/avif" });
+    // Squoosh's AVIF encoder accepts options like cqLevel, effort, etc.
+    const avifOptions = { cqLevel: 100 - quality, effort: 4 }; // Lower cqLevel = higher quality
+    const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
+    blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const encoded = encodeWebp(imageData.data, newWidth, newHeight, 75); // quality 75
-    blob = new Blob([encoded], { type: "image/webp" });
+    const webpOptions = { quality: quality };
+    const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
+    blob = new Blob([encoded.buffer], { type: "image/webp" });
   } else {
-    let quality = 0.95;
+    // jpeg/png fallback, try to fit into targetSize
+    let q = quality / 100;
     do {
-      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
-      quality -= 0.05;
-    } while (blob && blob.size > targetSize && quality > 0.05);
+      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, q));
+      q -= 0.05;
+    } while (blob && blob.size > targetSize && q > 0.05);
   }
 
   const previewURL = URL.createObjectURL(blob);
