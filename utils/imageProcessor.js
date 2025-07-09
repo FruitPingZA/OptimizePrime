@@ -1,23 +1,7 @@
-import initAvif from '../codecs/avif/avif_enc.js';
-import initWebP from '../codecs/webp/webp_enc.js';
-import initMozJpeg from '../codecs/mozjpeg/mozjpeg_enc.js';
-import initQuant from '../codecs/imagequant/imagequant.js';
-
-let avifEnc, webpEnc, mozjpegEnc, imageQuantEnc;
-
-async function ensureCodecsLoaded() {
-  if (!avifEnc) avifEnc = await initAvif();
-  if (!webpEnc) webpEnc = await initWebP();
-  if (!mozjpegEnc) mozjpegEnc = await initMozJpeg();
-  if (!imageQuantEnc) imageQuantEnc = await initQuant();
-}
-
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
-  await ensureCodecsLoaded();
   const img = await loadImageFromFile(file);
-
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
   const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
   const newWidth = Math.round(img.width * scale);
@@ -27,55 +11,45 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-  let binary, mimeType;
+  const qualityStart = 0.95;
+  const qualityStep = 0.05;
+  let quality = qualityStart;
+  let blob = null;
 
-  try {
-    switch (format) {
-      case 'avif':
-        binary = avifEnc.encode(imageData, { cqLevel: 33, effort: 4 });
-        mimeType = 'image/avif';
-        break;
-      case 'webp':
-        const quantized = imageQuantEnc.quantize(imageData);
-        binary = webpEnc.encode(quantized, { quality: 75 });
-        mimeType = 'image/webp';
-        break;
-      case 'jpeg':
-      case 'jpg':
-        binary = mozjpegEnc.encode(imageData, { quality: 75 });
-        mimeType = 'image/jpeg';
-        break;
-      case 'png':
-        return await compressWithCanvasFallback(canvas, 'image/png', file.name, targetSize);
-      default:
-        throw new Error('Unsupported format: ' + format);
+  // Get RGBA pixel data
+  const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+  const rgba = imageData.data;
+
+  const tryEncode = async () => {
+    if (format === "avif" && window.avifEncoder?.encode) {
+      const result = window.avifEncoder.encode(rgba, newWidth, newHeight, quality);
+      return new Blob([result.buffer], { type: "image/avif" });
     }
 
-    const blob = new Blob([binary], { type: mimeType });
-    const previewURL = URL.createObjectURL(blob);
-    const name = file.name.replace(/\.[^/.]+$/, `.${format}`);
+    if (format === "webp" && window.webpEncoder?.encode) {
+      const result = window.webpEncoder.encode(rgba, newWidth, newHeight, quality);
+      return new Blob([result.buffer], { type: "image/webp" });
+    }
 
-    return { blob, previewURL, name };
+    if ((format === "jpeg" || format === "jpg") && window.mozjpegEncoder?.encode) {
+      const result = window.mozjpegEncoder.encode(rgba, newWidth, newHeight, quality * 100); // quality in %
+      return new Blob([result.buffer], { type: "image/jpeg" });
+    }
 
-  } catch (err) {
-    console.error(`Error compressing ${file.name}:`, err);
-    return await compressWithCanvasFallback(canvas, `image/${format}`, file.name, targetSize);
-  }
-}
+    // Fallback to canvas.toBlob for other formats
+    return await new Promise(resolve =>
+      canvas.toBlob(resolve, `image/${format}`, quality)
+    );
+  };
 
-async function compressWithCanvasFallback(canvas, mimeType, originalName, targetSize) {
-  let quality = 0.95;
-  let blob;
   do {
-    blob = await new Promise(res => canvas.toBlob(res, mimeType, quality));
-    quality -= 0.05;
+    blob = await tryEncode();
+    quality -= qualityStep;
   } while (blob && blob.size > targetSize && quality > 0.05);
 
   const previewURL = URL.createObjectURL(blob);
-  const name = originalName.replace(/\.[^/.]+$/, `.${mimeType.split('/')[1]}`);
-
-  return { blob, previewURL, name };
+  const finalName = file.name.replace(/\.[^/.]+$/, `.${format}`);
+  return { blob, previewURL, name: finalName };
 }
 
 function loadImageFromFile(file) {
