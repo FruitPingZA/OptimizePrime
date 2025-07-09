@@ -76,7 +76,7 @@ async function processImages() {
   }
 }
 
-function downloadAll() {
+async function downloadAll() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
@@ -88,20 +88,29 @@ function downloadAll() {
       zip.file(name, blob);
     });
 
-    zip.generateAsync({ type: "blob" }).then(zipBlob => {
+    try {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "optimizeprime_images.zip");
-      clearPreview();
-    });
+      showClearButton();
+    } catch (err) {
+      console.error("ZIP download failed:", err);
+    }
   } else {
-    let completed = 0;
-    processedBlobs.forEach(({ blob, name }) => {
-      saveAs(blob, name);
-      completed++;
-      if (completed === processedBlobs.length) {
-        setTimeout(() => clearPreview(), 1000);
+    try {
+      for (const { blob, name } of processedBlobs) {
+        saveAs(blob, name);
       }
-    });
+      showClearButton();
+    } catch (err) {
+      console.error("Direct download failed:", err);
+    }
   }
+}
+
+function showClearButton() {
+  downloadAllBtn.textContent = "Clear";
+  downloadAllBtn.removeEventListener("click", downloadAll);
+  downloadAllBtn.addEventListener("click", clearPreview);
 }
 
 function clearPreview() {
@@ -109,4 +118,7 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
+  downloadAllBtn.textContent = "Download";
+  downloadAllBtn.removeEventListener("click", clearPreview);
+  downloadAllBtn.addEventListener("click", downloadAll);
 }
