@@ -14,30 +14,31 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let quality = 0.95;
   let blob;
 
+  // Try compress loop (standard browsers)
   do {
-    blob = await new Promise(res =>
+    blob = await new Promise((res) =>
       canvas.toBlob(res, `image/${format}`, quality)
     );
     quality -= 0.05;
   } while (blob && blob.size > targetSize && quality > 0.05);
 
-  if (!blob) throw new Error("Compression failed: unable to generate blob");
+  if (!blob) {
+    throw new Error("Compression failed: could not generate blob.");
+  }
 
   const previewURL = URL.createObjectURL(blob);
-  const name = file.name.replace(/\.[^/.]+$/, `.${format}`);
-  return { blob, previewURL, name };
+  const outputName = file.name.replace(/\.[^/.]+$/, `.${format}`);
+  return { blob, previewURL, name: outputName };
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = err => reject(err);
       img.src = reader.result;
     };
-    reader.onerror = err => reject(err);
     reader.readAsDataURL(file);
   });
 }
