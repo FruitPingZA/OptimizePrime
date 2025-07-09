@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>OptimizePrime</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>OptimizePrime</h1>
     <div class="drop-area" id="dropArea">
       <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden />
     </div>
 
     <div class="controls">
-      <label>Max Width: <input type="number" id="maxWidth" value="800"></label>
-      <label>Max Height: <input type="number" id="maxHeight" value="800"></label>
+      <label>Max Width: <input type="number" id="maxWidth" value="800" /></label>
+      <label>Max Height: <input type="number" id="maxHeight" value="800" /></label>
       <label>Format:
         <select id="format">
           <option value="webp">WebP</option>
@@ -25,11 +25,10 @@
           <option value="png">PNG</option>
         </select>
       </label>
-      <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
-      <br>
+      <label>Target Size (KB): <input type="number" id="targetSize" value="200" /></label>
+      <br />
       <button id="processBtn">Compress</button>
       <button id="downloadAllBtn">Download</button>
-      <button id="clearBtn" style="display:none;">Clear</button>
     </div>
 
     <div id="preview"></div>
