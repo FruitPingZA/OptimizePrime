@@ -5,114 +5,116 @@ const fileInput = document.getElementById('fileInput');
 const processBtn = document.getElementById('processBtn');
 const downloadAllBtn = document.getElementById('downloadAllBtn');
 const preview = document.getElementById('preview');
-const formatSelector = document.getElementById('format');
-const maxWidth = document.getElementById('maxWidth');
-const maxHeight = document.getElementById('maxHeight');
-const targetSize = document.getElementById('targetSize');
 
 let compressedImages = [];
 
-dropArea.addEventListener('click', () => fileInput.click());
-
-fileInput.addEventListener('change', handleFiles);
 dropArea.addEventListener('dragover', (e) => {
   e.preventDefault();
   dropArea.classList.add('hover');
 });
-dropArea.addEventListener('dragleave', () => dropArea.classList.remove('hover'));
+
+dropArea.addEventListener('dragleave', () => {
+  dropArea.classList.remove('hover');
+});
+
 dropArea.addEventListener('drop', (e) => {
   e.preventDefault();
   dropArea.classList.remove('hover');
-  handleFiles({ target: { files: e.dataTransfer.files } });
+  handleFiles(e.dataTransfer.files);
 });
 
-processBtn.addEventListener('click', processImages);
-downloadAllBtn.addEventListener('click', triggerDownloadAll);
+fileInput.addEventListener('change', (e) => {
+  handleFiles(e.target.files);
+});
 
-function handleFiles(event) {
-  const files = Array.from(event.target.files);
-  if (files.length === 0) return;
-
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      img.classList.add('preview-img');
-      preview.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-
-  // Save raw files for processing
-  dropArea.dataset.files = JSON.stringify(files.map(file => ({
-    name: file.name,
-    type: file.type
-  })));
-  dropArea.files = files;
-}
-
-async function processImages() {
-  const files = dropArea.files;
-  if (!files || files.length === 0) return;
-
-  compressedImages = [];
-
-  for (let file of files) {
-    try {
-      const result = await compressImage(
-        file,
-        formatSelector.value,
-        parseInt(maxWidth.value),
-        parseInt(maxHeight.value),
-        parseInt(targetSize.value) * 1024
-      );
-
-      compressedImages.push(result);
-
-      const img = document.createElement('img');
-      img.src = result.previewURL;
-      img.classList.add('preview-img');
-      preview.appendChild(img);
-    } catch (error) {
-      console.error('Compression failed for', file.name, error);
+function handleFiles(files) {
+  [...files].forEach(file => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const imgElement = document.createElement('img');
+          imgElement.src = reader.result;
+          imgElement.className = 'preview-img';
+          preview.appendChild(imgElement);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
     }
-  }
-
-  if (!document.getElementById('clearBtn')) {
-    const clearBtn = document.createElement('button');
-    clearBtn.id = 'clearBtn';
-    clearBtn.textContent = 'Clear';
-    clearBtn.style.marginTop = '10px';
-    clearBtn.addEventListener('click', () => {
-      preview.innerHTML = '';
-      compressedImages = [];
-      const btn = document.getElementById('clearBtn');
-      if (btn) btn.remove();
-    });
-    preview.appendChild(clearBtn);
-  }
+  });
+  fileInput.value = '';
 }
 
-async function triggerDownloadAll() {
-  if (compressedImages.length === 0) {
-    alert('No images to download.');
+processBtn.addEventListener('click', async () => {
+  const files = fileInput.files.length ? fileInput.files : dropArea.files;
+  if (!files || !files.length) {
+    alert('Please add images first.');
     return;
   }
 
-  if (compressedImages.length > 10) {
-    const zip = new JSZip();
-    compressedImages.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
+  compressedImages = []; // Reset before new compression
+  preview.innerHTML = '';
 
-    const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, 'compressed-images.zip');
-  } else {
-    compressedImages.forEach(({ blob, name }) => {
-      saveAs(blob, name);
-    });
+  const format = document.getElementById('format').value;
+  const maxWidth = parseInt(document.getElementById('maxWidth').value, 10);
+  const maxHeight = parseInt(document.getElementById('maxHeight').value, 10);
+  const targetSize = parseInt(document.getElementById('targetSize').value, 10) * 1024;
+
+  for (const file of files) {
+    try {
+      const result = await compressImage(file, format, maxWidth, maxHeight, targetSize);
+      const imgElement = document.createElement('img');
+      imgElement.src = result.previewURL;
+      imgElement.className = 'preview-img';
+      preview.appendChild(imgElement);
+      compressedImages.push(result);
+    } catch (err) {
+      console.error('Error compressing', file.name, err);
+    }
+  }
+});
+
+downloadAllBtn.addEventListener('click', async () => {
+  if (!compressedImages.length) {
+    alert('No images to download');
+    return;
   }
 
-  // DO NOT clear here — only user can press 'Clear' manually
+  const zip = new JSZip();
+  const isZip = compressedImages.length >= 10;
+
+  for (const { blob, name } of compressedImages) {
+    if (isZip) {
+      zip.file(name, blob);
+    } else {
+      saveAs(blob, name);
+    }
+  }
+
+  if (isZip) {
+    const content = await zip.generateAsync({ type: 'blob' });
+    saveAs(content, 'compressed_images.zip');
+  }
+
+  // Show "Clear" button after download attempt
+  showClearButton();
+});
+
+function showClearButton() {
+  let existingClearBtn = document.getElementById('clearBtn');
+  if (existingClearBtn) return;
+
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'clearBtn';
+  clearBtn.textContent = 'Clear';
+  clearBtn.style.marginLeft = '10px';
+  clearBtn.style.background = '#ff5cad';
+  clearBtn.onclick = () => {
+    preview.innerHTML = '';
+    compressedImages = [];
+    clearBtn.remove();
+  };
+  document.querySelector('.controls').appendChild(clearBtn);
 }
