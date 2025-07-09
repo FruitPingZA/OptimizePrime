@@ -15,6 +15,7 @@ processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 clearBtn.addEventListener("click", clearPreview);
 
+// Enable drag-drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -29,6 +30,7 @@ function handleFiles(event) {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
+  clearBtn.style.display = "none";
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
@@ -52,7 +54,7 @@ function handleFiles(event) {
     reader.readAsDataURL(file);
   });
 
-  fileInput.value = "";
+  fileInput.value = ""; // Reset input
 }
 
 async function processImages() {
@@ -93,14 +95,15 @@ function downloadAll() {
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
-
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
+      clearBtn.style.display = "inline-block";
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
       saveAs(blob, name);
     });
+    clearBtn.style.display = "inline-block";
   }
 }
 
