@@ -1,4 +1,5 @@
 import { compressImage } from './utils/imageProcessor.js';
+import saveAs from './lib/saveFile.js'; // NEW
 
 let processedBlobs = [];
 let originalPreviews = [];
@@ -6,12 +7,14 @@ let originalPreviews = [];
 const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
+const clearAllBtn = document.getElementById("clearAllBtn");
 const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", triggerDownload);
+downloadAllBtn.addEventListener("click", downloadAll);
+clearAllBtn.addEventListener("click", clearPreview);
 
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
@@ -58,7 +61,6 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
@@ -69,56 +71,41 @@ async function processImages() {
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
 
-      const filename = document.createElement("p");
-      filename.innerText = name;
-
-      element.appendChild(filename);
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
-    } catch (error) {
-      console.error(`Compression failed for ${file.name}`, error);
+    } catch (err) {
+      console.error("Compression failed for", file.name, err);
     }
   }
 
-  // Show "Clear All" button after compression
-  showClearButton();
+  if (processedBlobs.length) {
+    clearAllBtn.style.display = "inline-block";
+  }
 }
 
-function triggerDownload() {
+function downloadAll() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
-
-  const clearBtn = document.getElementById("clearBtn");
-  if (clearBtn) clearBtn.remove(); // avoid duplicates
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
+
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      showClearButton();
     });
   } else {
     processedBlobs.forEach(({ blob, name }) => {
       saveAs(blob, name);
     });
-    showClearButton();
   }
-}
 
-function showClearButton() {
-  const clearBtn = document.createElement("button");
-  clearBtn.textContent = "Clear All";
-  clearBtn.id = "clearBtn";
-  clearBtn.style.backgroundColor = "#ff5cad";
-  clearBtn.style.marginTop = "15px";
-  clearBtn.style.fontWeight = "bold";
-  clearBtn.addEventListener("click", clearPreview);
-  preview.appendChild(clearBtn);
+  // Show clear button after download
+  clearAllBtn.style.display = "inline-block";
 }
 
 function clearPreview() {
@@ -126,4 +113,5 @@ function clearPreview() {
   processedBlobs = [];
   originalPreviews = [];
   filesToProcess = [];
+  clearAllBtn.style.display = "none";
 }
