@@ -75,8 +75,8 @@ async function processImages() {
     }
   }
 
-  // Add a single clear button after processing
-  if (!document.getElementById("clearBtn")) {
+  const existingClear = document.getElementById("clearBtn");
+  if (!existingClear) {
     const clearBtn = document.createElement("button");
     clearBtn.textContent = "Clear";
     clearBtn.id = "clearBtn";
