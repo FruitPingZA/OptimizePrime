@@ -1,7 +1,7 @@
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize) {
   const img = await loadImageFromFile(file);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
   const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
   const newWidth = Math.round(img.width * scale);
@@ -11,40 +11,46 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-  const rgba = new Uint8Array(imageData.data.buffer);
-  let quality = 0.95;
-  let blob;
+  if (format === 'avif') {
+    const avifEncoder = await import('../codecs/avif/avif_enc.js');
+    const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    const rgba = imageData.data;
 
-  try {
-    if (format === "avif" && window.avifEncoder?.encode) {
-      const encoded = window.avifEncoder.encode(rgba, newWidth, newHeight, Math.round(quality * 100));
-      blob = new Blob([encoded.buffer], { type: "image/avif" });
-    } else if (format === "webp" && window.webpEncoder?.encode) {
-      const encoded = window.webpEncoder.encode(rgba, newWidth, newHeight, Math.round(quality * 100));
-      blob = new Blob([encoded.buffer], { type: "image/webp" });
-    } else if ((format === "jpeg" || format === "jpg") && window.mozjpegEncoder?.encode) {
-      const encoded = window.mozjpegEncoder.encode(rgba, newWidth, newHeight, Math.round(quality * 100));
-      blob = new Blob([encoded.buffer], { type: "image/jpeg" });
-    } else {
-      // fallback using toBlob
-      do {
-        blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
-        quality -= 0.05;
-      } while (blob && blob.size > targetSize && quality > 0.05);
+    // Try compressing with increasing quality until below targetSize
+    let quality = 30;
+    let blob = null;
+
+    while (quality <= 70) {
+      const avifData = avifEncoder.encode(rgba, newWidth, newHeight, { cqLevel: quality, effort: 6 });
+      blob = new Blob([avifData], { type: 'image/avif' });
+
+      if (blob.size <= targetSize) break;
+      quality += 5;
     }
 
     const previewURL = URL.createObjectURL(blob);
     return {
       blob,
       previewURL,
-      name: file.name.replace(/\.[^/.]+$/, `.${format}`)
+      name: file.name.replace(/\.[^/.]+$/, '.avif')
     };
-
-  } catch (err) {
-    console.error(`Error compressing ${file.name}:`, err);
-    throw err;
   }
+
+  // fallback for other formats (webp, jpeg, png)
+  let quality = 0.95;
+  let blob;
+
+  do {
+    blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+    quality -= 0.05;
+  } while (blob && blob.size > targetSize && quality > 0.05);
+
+  const previewURL = URL.createObjectURL(blob);
+  return {
+    blob,
+    previewURL,
+    name: file.name.replace(/\.[^/.]+$/, `.${format}`)
+  };
 }
 
 function loadImageFromFile(file) {
