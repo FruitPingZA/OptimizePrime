@@ -11,10 +11,10 @@ const preview = document.getElementById("preview");
 
 fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
-downloadAllBtn.addEventListener("click", downloadAll);
+downloadAllBtn.addEventListener("click", downloadAllImages);
 
-dropArea.addEventListener("dragover", e => e.preventDefault());
-dropArea.addEventListener("drop", e => {
+dropArea.addEventListener("dragover", (e) => e.preventDefault());
+dropArea.addEventListener("drop", (e) => {
   e.preventDefault();
   handleFiles({ target: { files: e.dataTransfer.files } });
 });
@@ -30,7 +30,7 @@ function handleFiles(event) {
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       const container = document.createElement("div");
       container.className = "image-container";
 
@@ -56,7 +56,7 @@ function handleFiles(event) {
 async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value.toLowerCase();
+  const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
   processedBlobs = [];
 
@@ -71,15 +71,22 @@ async function processImages() {
       element.appendChild(compressedImg);
       processedBlobs.push({ blob, name });
     } catch (err) {
-      console.error(`Error compressing ${file.name}:`, err);
+      console.error("Error compressing", file.name, ":", err);
     }
   }
 
-  // Show "Clear" button after processing
-  showClearButton();
+  // Add a single clear button after processing
+  if (!document.getElementById("clearBtn")) {
+    const clearBtn = document.createElement("button");
+    clearBtn.textContent = "Clear";
+    clearBtn.id = "clearBtn";
+    clearBtn.style.backgroundColor = "#ff5cad";
+    clearBtn.onclick = clearPreview;
+    preview.appendChild(clearBtn);
+  }
 }
 
-function downloadAll() {
+function downloadAllImages() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
@@ -90,7 +97,8 @@ function downloadAll() {
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
-    zip.generateAsync({ type: "blob" }).then(zipBlob => {
+
+    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
       saveAs(zipBlob, "optimizeprime_images.zip");
     });
   } else {
@@ -98,22 +106,6 @@ function downloadAll() {
       saveAs(blob, name);
     });
   }
-
-  // Do not clear immediately. Wait for user to press "Clear"
-}
-
-function showClearButton() {
-  // Avoid duplicates
-  if (document.getElementById("clearBtn")) return;
-
-  const clearBtn = document.createElement("button");
-  clearBtn.id = "clearBtn";
-  clearBtn.innerText = "Clear";
-  clearBtn.style.backgroundColor = "#ff5cad";
-  clearBtn.style.marginTop = "10px";
-  clearBtn.addEventListener("click", clearPreview);
-
-  preview.appendChild(clearBtn);
 }
 
 function clearPreview() {
