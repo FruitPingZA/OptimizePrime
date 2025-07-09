@@ -11,45 +11,40 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   canvas.height = newHeight;
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-  const qualityStart = 0.95;
-  const qualityStep = 0.05;
-  let quality = qualityStart;
-  let blob = null;
-
-  // Get RGBA pixel data
   const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-  const rgba = imageData.data;
+  const rgba = new Uint8Array(imageData.data.buffer);
+  let quality = 0.95;
+  let blob;
 
-  const tryEncode = async () => {
+  try {
     if (format === "avif" && window.avifEncoder?.encode) {
-      const result = window.avifEncoder.encode(rgba, newWidth, newHeight, quality);
-      return new Blob([result.buffer], { type: "image/avif" });
+      const encoded = window.avifEncoder.encode(rgba, newWidth, newHeight, Math.round(quality * 100));
+      blob = new Blob([encoded.buffer], { type: "image/avif" });
+    } else if (format === "webp" && window.webpEncoder?.encode) {
+      const encoded = window.webpEncoder.encode(rgba, newWidth, newHeight, Math.round(quality * 100));
+      blob = new Blob([encoded.buffer], { type: "image/webp" });
+    } else if ((format === "jpeg" || format === "jpg") && window.mozjpegEncoder?.encode) {
+      const encoded = window.mozjpegEncoder.encode(rgba, newWidth, newHeight, Math.round(quality * 100));
+      blob = new Blob([encoded.buffer], { type: "image/jpeg" });
+    } else {
+      // fallback using toBlob
+      do {
+        blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, quality));
+        quality -= 0.05;
+      } while (blob && blob.size > targetSize && quality > 0.05);
     }
 
-    if (format === "webp" && window.webpEncoder?.encode) {
-      const result = window.webpEncoder.encode(rgba, newWidth, newHeight, quality);
-      return new Blob([result.buffer], { type: "image/webp" });
-    }
+    const previewURL = URL.createObjectURL(blob);
+    return {
+      blob,
+      previewURL,
+      name: file.name.replace(/\.[^/.]+$/, `.${format}`)
+    };
 
-    if ((format === "jpeg" || format === "jpg") && window.mozjpegEncoder?.encode) {
-      const result = window.mozjpegEncoder.encode(rgba, newWidth, newHeight, quality * 100); // quality in %
-      return new Blob([result.buffer], { type: "image/jpeg" });
-    }
-
-    // Fallback to canvas.toBlob for other formats
-    return await new Promise(resolve =>
-      canvas.toBlob(resolve, `image/${format}`, quality)
-    );
-  };
-
-  do {
-    blob = await tryEncode();
-    quality -= qualityStep;
-  } while (blob && blob.size > targetSize && quality > 0.05);
-
-  const previewURL = URL.createObjectURL(blob);
-  const finalName = file.name.replace(/\.[^/.]+$/, `.${format}`);
-  return { blob, previewURL, name: finalName };
+  } catch (err) {
+    console.error(`Error compressing ${file.name}:`, err);
+    throw err;
+  }
 }
 
 function loadImageFromFile(file) {
