@@ -82,14 +82,14 @@ async function processImages() {
   }
 }
 
-function downloadAll() {
+async function downloadAll() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
 
-  // Show Clear button
-  showClearButton();
+  // Only add one clear button
+  if (!document.getElementById("clearBtn")) showClearButton();
 
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
@@ -97,20 +97,25 @@ function downloadAll() {
       zip.file(name, blob);
     });
 
-    zip.generateAsync({ type: "blob" }).then(zipBlob => {
+    try {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "optimizeprime_images.zip");
-    });
+    } catch (error) {
+      console.error("ZIP creation failed:", error);
+    }
   } else {
-    processedBlobs.forEach(({ blob, name }) => {
-      saveAs(blob, name);
-    });
+    for (const { blob, name } of processedBlobs) {
+      try {
+        saveAs(blob, name);
+        await new Promise(res => setTimeout(res, 200)); // small delay
+      } catch (error) {
+        console.error("Download failed:", error);
+      }
+    }
   }
 }
 
 function showClearButton() {
-  let existing = document.getElementById("clearBtn");
-  if (existing) return;
-
   const clearBtn = document.createElement("button");
   clearBtn.innerText = "Clear All";
   clearBtn.id = "clearBtn";
@@ -121,8 +126,6 @@ function showClearButton() {
     processedBlobs = [];
     originalPreviews = [];
     filesToProcess = [];
-    clearBtn.remove();
   });
-
   preview.appendChild(clearBtn);
 }
