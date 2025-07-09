@@ -1,7 +1,16 @@
-import avifModule from './avif_enc.js';
+import initWasm from './avif_enc.js';
 
-// Wait for WASM to initialize before calling encode
+let modulePromise = null;
+
+function getModule() {
+  if (!modulePromise) {
+    modulePromise = initWasm();
+  }
+  return modulePromise;
+}
+
 export async function encode(data, width, height, options) {
-  await avifModule.ready;
-  return avifModule.encode(data, width, height, options);
+  const module = await getModule();
+  await module.ready;
+  return module.encode(data, width, height, options);
 }
