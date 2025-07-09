@@ -29,7 +29,6 @@ function handleFiles(event) {
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
-  clearBtn.style.display = "none";
 
   filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
@@ -61,7 +60,6 @@ async function processImages() {
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
   const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
-
   processedBlobs = [];
 
   for (const { file, element } of originalPreviews) {
@@ -77,6 +75,10 @@ async function processImages() {
     } catch (err) {
       console.error(`Error compressing ${file.name}:`, err);
     }
+  }
+
+  if (processedBlobs.length) {
+    clearBtn.style.display = "inline-block";
   }
 }
 
@@ -94,16 +96,10 @@ function downloadAll() {
 
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
-      clearBtn.style.display = "inline-block";
     });
   } else {
-    let completed = 0;
     processedBlobs.forEach(({ blob, name }) => {
       saveAs(blob, name);
-      completed++;
-      if (completed === processedBlobs.length) {
-        clearBtn.style.display = "inline-block";
-      }
     });
   }
 }
