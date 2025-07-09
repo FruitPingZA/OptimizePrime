@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>OptimizePrime</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>OptimizePrime</h1>
     <div class="drop-area" id="dropArea">
       <p>Drag & drop images here or <label for="fileInput" class="upload-label">browse</label></p>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden />
     </div>
 
     <div class="controls">
-      <label>Max Width: <input type="number" id="maxWidth" value="800"></label>
-      <label>Max Height: <input type="number" id="maxHeight" value="800"></label>
+      <label>Max Width: <input type="number" id="maxWidth" value="800" /></label>
+      <label>Max Height: <input type="number" id="maxHeight" value="800" /></label>
       <label>Format:
         <select id="format">
           <option value="webp">WebP</option>
@@ -25,20 +25,21 @@
           <option value="png">PNG</option>
         </select>
       </label>
-      <label>Target Size (KB): <input type="number" id="targetSize" value="200"></label>
-      <br>
+      <label>Target Size (KB): <input type="number" id="targetSize" value="200" /></label>
+      <br />
       <button id="processBtn">Compress</button>
-      <button id="downloadAllBtn" data-mode="download">Download</button>
+      <button id="downloadAllBtn">Download</button>
+      <button id="clearAllBtn" style="display: none;">Clear All</button>
     </div>
 
     <div id="preview"></div>
   </div>
 
-  <!-- JS libraries -->
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script src="lib/jszip.min.js"></script>
-  <script src="lib/FileSaver.min.js"></script>
 
-  <!-- Main logic must be a module if it uses `import` -->
+  <!-- Internal Modules -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
