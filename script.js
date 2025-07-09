@@ -1,34 +1,36 @@
-import { compressImage } from "./utils/imageProcessor.js";
+import { compressImage } from './utils/imageProcessor.js';
 
-let filesToProcess = [];
 let processedBlobs = [];
 let originalPreviews = [];
 
 const fileInput = document.getElementById("fileInput");
-const dropArea = document.getElementById("dropArea");
 const processBtn = document.getElementById("processBtn");
-const downloadBtn = document.getElementById("downloadAllBtn");
+const downloadAllBtn = document.getElementById("downloadAllBtn");
+const dropArea = document.getElementById("dropArea");
 const preview = document.getElementById("preview");
 
-dropArea.addEventListener("dragover", (e) => e.preventDefault());
-dropArea.addEventListener("drop", (e) => {
+fileInput.addEventListener("change", handleFiles);
+processBtn.addEventListener("click", processImages);
+downloadAllBtn.addEventListener("click", handleDownload);
+
+dropArea.addEventListener("dragover", e => e.preventDefault());
+dropArea.addEventListener("drop", e => {
   e.preventDefault();
-  handleFiles(e.dataTransfer.files);
+  handleFiles({ target: { files: e.dataTransfer.files } });
 });
 dropArea.addEventListener("click", () => fileInput.click());
-fileInput.addEventListener("change", () => handleFiles(fileInput.files));
-processBtn.addEventListener("click", processImages);
-downloadBtn.addEventListener("click", handleDownload);
 
-function handleFiles(fileList) {
-  filesToProcess = Array.from(fileList);
+let filesToProcess = [];
+
+function handleFiles(event) {
+  filesToProcess = Array.from(event.target.files);
   preview.innerHTML = "";
   processedBlobs = [];
   originalPreviews = [];
 
-  filesToProcess.forEach((file) => {
+  filesToProcess.forEach((file, index) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const container = document.createElement("div");
       container.className = "image-container";
 
@@ -43,7 +45,7 @@ function handleFiles(fileList) {
       container.appendChild(originalImg);
       preview.appendChild(container);
 
-      originalPreviews.push({ file, element: container });
+      originalPreviews.push({ index, file, element: container });
     };
     reader.readAsDataURL(file);
   });
@@ -54,7 +56,7 @@ function handleFiles(fileList) {
 async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value;
+  const format = document.getElementById("format").value.toLowerCase();
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
 
   processedBlobs = [];
@@ -66,66 +68,52 @@ async function processImages() {
       const compressedImg = new Image();
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
-
       element.appendChild(compressedImg);
+
       processedBlobs.push({ blob, name });
     } catch (err) {
       console.error(`Error compressing ${file.name}:`, err);
     }
   }
 
-  showClearButton();
+  if (!document.getElementById("clearBtn")) {
+    const clearBtn = document.createElement("button");
+    clearBtn.textContent = "Clear";
+    clearBtn.id = "clearBtn";
+    clearBtn.style.marginTop = "20px";
+    clearBtn.style.backgroundColor = "#ff5cad";
+    clearBtn.onclick = clearPreview;
+    preview.appendChild(clearBtn);
+  }
 }
 
-function handleDownload() {
+async function handleDownload() {
   if (!processedBlobs.length) {
     alert("No images to download.");
     return;
   }
 
+  const JSZip = window.JSZip;
   if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
-    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
-      saveAs(zipBlob, "optimizeprime_images.zip");
-    });
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    saveAs(zipBlob, "optimizeprime_images.zip");
   } else {
     processedBlobs.forEach(({ blob, name }) => {
-      // Explicitly create a temporary anchor to force download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      saveAs(blob, name);
     });
   }
 
-  showClearButton();
+  // Don't auto-clear; wait for user to click the button
 }
 
-function showClearButton() {
-  if (!document.getElementById("clearBtn")) {
-    const clearBtn = document.createElement("button");
-    clearBtn.textContent = "Clear All";
-    clearBtn.id = "clearBtn";
-    clearBtn.style.marginTop = "20px";
-    clearBtn.style.background = "#ff5cad";
-    clearBtn.style.color = "#fff";
-    clearBtn.style.border = "none";
-    clearBtn.style.padding = "10px 20px";
-    clearBtn.style.borderRadius = "5px";
-    clearBtn.style.cursor = "pointer";
-    clearBtn.addEventListener("click", () => {
-      preview.innerHTML = "";
-      filesToProcess = [];
-      processedBlobs = [];
-      originalPreviews = [];
-    });
-    preview.appendChild(clearBtn);
-  }
+function clearPreview() {
+  preview.innerHTML = "";
+  processedBlobs = [];
+  originalPreviews = [];
+  filesToProcess = [];
 }
