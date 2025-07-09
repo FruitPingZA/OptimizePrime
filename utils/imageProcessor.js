@@ -19,22 +19,24 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     try {
       const avifModule = await import("../codecs/avif/avif_enc.js");
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const encoded = avifModule.encode(imageData.data, canvas.width, canvas.height, { quality: 50 });
+      const encoded = avifModule.encode(imageData.data, canvas.width, canvas.height, {
+        quality: 60,
+      });
       blob = new Blob([encoded.buffer], { type: mimeType });
-    } catch (e) {
-      console.error("AVIF compression failed:", e);
-      throw e;
+    } catch (err) {
+      console.error("AVIF compression error:", err);
+      throw err;
     }
   } else {
     do {
-      blob = await new Promise((res) =>
-        canvas.toBlob(res, mimeType, quality)
+      blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, mimeType, quality)
       );
       quality -= 0.05;
     } while (blob && blob.size > targetSize && quality > 0.05);
   }
 
-  if (!blob) throw new Error("Compression failed, no blob generated.");
+  if (!blob) throw new Error("Compression failed. Blob is null.");
 
   const previewURL = URL.createObjectURL(blob);
   const name = file.name.replace(/\.[^/.]+$/, `.${format}`);
@@ -55,8 +57,8 @@ function loadImageFromFile(file) {
 
 function getMimeType(format) {
   switch (format.toLowerCase()) {
-    case "jpg":
     case "jpeg":
+    case "jpg":
       return "image/jpeg";
     case "png":
       return "image/png";
