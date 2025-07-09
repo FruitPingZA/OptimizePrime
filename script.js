@@ -13,7 +13,6 @@ fileInput.addEventListener("change", handleFiles);
 processBtn.addEventListener("click", processImages);
 downloadAllBtn.addEventListener("click", downloadAll);
 
-// Drag and drop
 dropArea.addEventListener("dragover", e => e.preventDefault());
 dropArea.addEventListener("drop", e => {
   e.preventDefault();
@@ -57,7 +56,7 @@ function handleFiles(event) {
 async function processImages() {
   const maxWidth = parseInt(document.getElementById("maxWidth").value);
   const maxHeight = parseInt(document.getElementById("maxHeight").value);
-  const format = document.getElementById("format").value.toLowerCase();
+  const format = document.getElementById("format").value;
   const targetSize = parseInt(document.getElementById("targetSize").value) * 1024;
 
   processedBlobs = [];
@@ -70,15 +69,17 @@ async function processImages() {
       compressedImg.src = previewURL;
       compressedImg.className = "preview-img compressed";
 
+      const label = document.createElement("p");
+      label.innerText = `Compressed: ${name}`;
+
+      element.appendChild(label);
       element.appendChild(compressedImg);
+
       processedBlobs.push({ blob, name });
     } catch (err) {
       console.error(`Error compressing ${file.name}:`, err);
     }
   }
-
-  // Show the download button after processing
-  downloadAllBtn.style.display = "inline-block";
 }
 
 function downloadAll() {
@@ -87,18 +88,15 @@ function downloadAll() {
     return;
   }
 
-  const clearBtn = document.createElement("button");
-  clearBtn.innerText = "Clear";
-  clearBtn.style.background = "#ff5cad";
-  clearBtn.style.marginTop = "10px";
-  clearBtn.onclick = clearPreview;
-  preview.appendChild(clearBtn);
+  // Show Clear button
+  showClearButton();
 
-  if (processedBlobs.length >= 10) {
+  if (processedBlobs.length > 10) {
     const zip = new JSZip();
     processedBlobs.forEach(({ blob, name }) => {
       zip.file(name, blob);
     });
+
     zip.generateAsync({ type: "blob" }).then(zipBlob => {
       saveAs(zipBlob, "optimizeprime_images.zip");
     });
@@ -109,10 +107,22 @@ function downloadAll() {
   }
 }
 
-function clearPreview() {
-  preview.innerHTML = "";
-  processedBlobs = [];
-  originalPreviews = [];
-  filesToProcess = [];
-  downloadAllBtn.style.display = "none";
+function showClearButton() {
+  let existing = document.getElementById("clearBtn");
+  if (existing) return;
+
+  const clearBtn = document.createElement("button");
+  clearBtn.innerText = "Clear All";
+  clearBtn.id = "clearBtn";
+  clearBtn.style.backgroundColor = "#ff5cad";
+  clearBtn.style.marginTop = "15px";
+  clearBtn.addEventListener("click", () => {
+    preview.innerHTML = "";
+    processedBlobs = [];
+    originalPreviews = [];
+    filesToProcess = [];
+    clearBtn.remove();
+  });
+
+  preview.appendChild(clearBtn);
 }
