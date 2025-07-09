@@ -2,91 +2,105 @@ import { compressImage } from './utils/imageProcessor.js';
 
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
-const maxWidthInput = document.getElementById('maxWidth');
-const maxHeightInput = document.getElementById('maxHeight');
-const formatInput = document.getElementById('format');
-const targetSizeInput = document.getElementById('targetSize');
+const maxWidth = document.getElementById('maxWidth');
+const maxHeight = document.getElementById('maxHeight');
+const formatSelect = document.getElementById('format');
+const targetSize = document.getElementById('targetSize');
 const processBtn = document.getElementById('processBtn');
-const downloadAllBtn = document.getElementById('downloadAllBtn');
+const downloadBtn = document.getElementById('downloadAllBtn');
 const preview = document.getElementById('preview');
 
-let images = [];
 let compressedImages = [];
 
-dropArea.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', handleFiles);
-dropArea.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropArea.classList.add('hover');
-});
-dropArea.addEventListener('dragleave', () => {
-  dropArea.classList.remove('hover');
-});
-dropArea.addEventListener('drop', e => {
-  e.preventDefault();
-  dropArea.classList.remove('hover');
-  handleFiles({ target: { files: e.dataTransfer.files } });
-});
-
-function handleFiles(event) {
-  const files = Array.from(event.target.files);
-  images = images.concat(files);
-  displayPreviews();
-}
-
-function displayPreviews() {
-  preview.innerHTML = '';
-  images.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = document.createElement('img');
-      img.src = reader.result;
-      img.classList.add('preview-img');
-      preview.appendChild(img);
-    };
-    reader.readAsDataURL(file);
+function addFiles(files) {
+  [...files].forEach(file => {
+    const imgContainer = document.createElement('div');
+    imgContainer.className = 'img-container';
+    imgContainer.textContent = `Added: ${file.name}`;
+    preview.appendChild(imgContainer);
+    compressedImages.push({ file, container: imgContainer });
   });
 }
 
-processBtn.addEventListener('click', async () => {
-  const maxWidth = parseInt(maxWidthInput.value, 10);
-  const maxHeight = parseInt(maxHeightInput.value, 10);
-  const format = formatInput.value;
-  const targetSize = parseInt(targetSizeInput.value, 10) * 1024;
+dropArea.addEventListener('click', () => fileInput.click());
 
-  compressedImages = [];
-
-  for (const file of images) {
-    try {
-      const result = await compressImage(file, format, maxWidth, maxHeight, targetSize);
-      compressedImages.push(result);
-
-      const img = document.createElement('img');
-      img.src = result.previewURL;
-      img.classList.add('preview-img');
-      preview.appendChild(img);
-    } catch (err) {
-      console.error(`Error compressing ${file.name}:`, err);
-    }
-  }
-
-  if (compressedImages.length > 0) {
-    showClearButton();
-  }
+dropArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropArea.classList.add('drag-over');
 });
 
-function showClearButton() {
+dropArea.addEventListener('dragleave', () => {
+  dropArea.classList.remove('drag-over');
+});
+
+dropArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropArea.classList.remove('drag-over');
+  addFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', () => {
+  addFiles(fileInput.files);
+});
+
+processBtn.addEventListener('click', async () => {
+  const width = parseInt(maxWidth.value);
+  const height = parseInt(maxHeight.value);
+  const format = formatSelect.value;
+  const size = parseInt(targetSize.value) * 1024;
+
+  const promises = compressedImages.map(async (item) => {
+    try {
+      const result = await compressImage(item.file, format, width, height, size);
+      item.blob = result.blob;
+      item.previewURL = result.previewURL;
+      item.name = result.name;
+
+      const img = new Image();
+      img.src = result.previewURL;
+      img.title = result.name;
+
+      item.container.innerHTML = '';
+      item.container.appendChild(img);
+    } catch (err) {
+      console.error(`Error compressing ${item.file.name}:`, err);
+      item.container.textContent = `Error compressing ${item.file.name}`;
+    }
+  });
+
+  await Promise.all(promises);
+
   if (!document.getElementById('clearBtn')) {
     const clearBtn = document.createElement('button');
     clearBtn.id = 'clearBtn';
     clearBtn.textContent = 'Clear';
-    clearBtn.classList.add('clear-btn');
+    clearBtn.classList.add('pink-btn');
     clearBtn.addEventListener('click', () => {
-      images = [];
       compressedImages = [];
       preview.innerHTML = '';
       clearBtn.remove();
     });
-    document.querySelector('.controls').appendChild(clearBtn);
+    downloadBtn.insertAdjacentElement('afterend', clearBtn);
   }
-}
+});
+
+downloadBtn.addEventListener('click', () => {
+  if (compressedImages.length === 0) {
+    alert("No images to download.");
+    return;
+  }
+
+  if (compressedImages.length > 10) {
+    const zip = new JSZip();
+    compressedImages.forEach(img => {
+      zip.file(img.name, img.blob);
+    });
+    zip.generateAsync({ type: 'blob' }).then(content => {
+      saveAs(content, 'compressed_images.zip');
+    });
+  } else {
+    compressedImages.forEach(img => {
+      saveAs(img.blob, img.name);
+    });
+  }
+});
