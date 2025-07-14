@@ -21,8 +21,11 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       quality: quality,
       speed: 6,
       qualityAlpha: quality,
-      tileRowsLog2: 0 // <--- required!
+      tileRowsLog2: 0,
+      tileColsLog2: 0,
+      subsample: 1
     };
+    console.log("AVIF options:", avifOptions);
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
@@ -33,8 +36,9 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       qualityAlpha: quality,
       method: 4,
       image_hint: 0,
-      target_size: 0 // <--- required!
+      target_size: 0
     };
+    console.log("WebP options:", webpOptions);
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
   } else {
