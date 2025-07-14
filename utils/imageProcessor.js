@@ -34,7 +34,8 @@ export async function compressImage(
       sharpness: 0,
       chromaDeltaQ: 0,
       tune: 0,
-      denoiseLevel: 0
+      denoiseLevel: 0,
+      enableSharpYUV: false // <--- NEW!
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
