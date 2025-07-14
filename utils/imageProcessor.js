@@ -1,7 +1,14 @@
 import { encode as encodeAvif } from '../codecs/avif/avif_wrapper.js';
 import { encode as encodeWebp } from '../codecs/webp/webp_wrapper.js';
 
-export async function compressImage(file, format, maxWidth, maxHeight, targetSize, quality = 80) {
+export async function compressImage(
+  file,
+  format,
+  maxWidth,
+  maxHeight,
+  targetSize,
+  quality = 80
+) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -27,7 +34,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       sharpness: 0,
       chromaDeltaQ: 0,
       tune: 0,
-      denoiseLevel: 0 // <--- NEW!
+      denoiseLevel: 0
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
@@ -68,13 +75,13 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   } else {
     let q = quality / 100;
     do {
-      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, q));
+      blob = await new Promise((res) => canvas.toBlob(res, `image/${format}`, q));
       q -= 0.05;
     } while (blob && blob.size > targetSize && q > 0.05);
   }
 
   if (!blob || blob.size === 0) {
-    throw new Error('Compression failed: No output blob');
+    throw new Error("Compression failed: No output blob");
   }
 
   const previewURL = URL.createObjectURL(blob);
@@ -86,7 +93,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
 }
 
 function loadImageFromFile(file) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
