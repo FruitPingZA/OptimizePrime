@@ -17,28 +17,54 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    // Comprehensive AVIF options for Squoosh and browser compatibility
     const avifOptions = {
       quality: quality,
       speed: 6,
       qualityAlpha: quality,
       tileRowsLog2: 0,
       tileColsLog2: 0,
-      subsample: 1
+      subsample: 1,
+      sharpness: 0,
+      chromaDeltaQ: 0, // Prevents missing field errors
+      // You can add more fields if needed, see Squoosh's AVIFEncoderOptions
     };
-    console.log("AVIF options:", avifOptions);
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    // Comprehensive WebP options for Squoosh and browser compatibility
     const webpOptions = {
       quality: quality,
       lossless: false,
       qualityAlpha: quality,
       method: 4,
       image_hint: 0,
-      target_size: 0
+      target_size: 0,
+      target_PSNR: 0,
+      segments: 4,
+      sns_strength: 50,
+      filter_strength: 20,
+      filter_sharpness: 0,
+      filter_type: 0,
+      autofilter: false,
+      alpha_compression: 1,
+      alpha_filtering: 1,
+      alpha_quality: 100,
+      pass: 1,
+      show_compressed: 0,
+      preprocessing: 0,
+      partitions: 0,
+      partition_limit: 0,
+      emulate_jpeg_size: false,
+      thread_level: 0,
+      low_memory: false,
+      near_lossless: 100,
+      exact: false,
+      use_delta_palette: false,
+      use_sharp_yuv: false
+      // You can add more fields if Squoosh adds more in the future!
     };
-    console.log("WebP options:", webpOptions);
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
   } else {
