@@ -34,8 +34,8 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Squoosh WebP expects { quality: 0-100, lossless: boolean }
-    const webpOptions = { quality: quality, lossless: false };
+    // Squoosh WebP expects { quality: 0-100, lossless: boolean, qualityAlpha: 0-100 }
+    const webpOptions = { quality: quality, lossless: false, qualityAlpha: quality };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
   } else {
