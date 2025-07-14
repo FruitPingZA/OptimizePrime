@@ -17,7 +17,6 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Comprehensive AVIF options for Squoosh and browser compatibility
     const avifOptions = {
       quality: quality,
       speed: 6,
@@ -26,14 +25,13 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       tileColsLog2: 0,
       subsample: 1,
       sharpness: 0,
-      chromaDeltaQ: 0, // Prevents missing field errors
-      // You can add more fields if needed, see Squoosh's AVIFEncoderOptions
+      chromaDeltaQ: 0,
+      tune: 0 // <--- add all required fields!
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Comprehensive WebP options for Squoosh and browser compatibility
     const webpOptions = {
       quality: quality,
       lossless: false,
@@ -41,7 +39,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       method: 4,
       image_hint: 0,
       target_size: 0,
-      target_PSNR: 0,
+      target_PSNR: 0, // <--- add all required fields!
       segments: 4,
       sns_strength: 50,
       filter_strength: 20,
@@ -63,7 +61,6 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       exact: false,
       use_delta_palette: false,
       use_sharp_yuv: false
-      // You can add more fields if Squoosh adds more in the future!
     };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
@@ -73,6 +70,11 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, q));
       q -= 0.05;
     } while (blob && blob.size > targetSize && q > 0.05);
+  }
+
+  // Ensure the blob is valid before making a download link
+  if (!blob || blob.size === 0) {
+    throw new Error('Compression failed: No output blob');
   }
 
   const previewURL = URL.createObjectURL(blob);
