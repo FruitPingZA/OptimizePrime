@@ -25,8 +25,8 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       tileColsLog2: 0,
       subsample: 1,
       sharpness: 0,
-      chromaDeltaQ: 0,
-      tune: 0 // <--- add all required fields!
+      chromaDeltaQ: 0, // <-- REQUIRED
+      tune: 0,
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
@@ -39,7 +39,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       method: 4,
       image_hint: 0,
       target_size: 0,
-      target_PSNR: 0, // <--- add all required fields!
+      target_PSNR: 0, // <-- REQUIRED
       segments: 4,
       sns_strength: 50,
       filter_strength: 20,
@@ -72,7 +72,6 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     } while (blob && blob.size > targetSize && q > 0.05);
   }
 
-  // Ensure the blob is valid before making a download link
   if (!blob || blob.size === 0) {
     throw new Error('Compression failed: No output blob');
   }
