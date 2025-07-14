@@ -1,17 +1,6 @@
 import { encode as encodeAvif } from '../codecs/avif/avif_wrapper.js';
 import { encode as encodeWebp } from '../codecs/webp/webp_wrapper.js';
 
-/**
- * Compresses an image file to the desired format and options.
- * 
- * @param {File} file - The image file to compress.
- * @param {string} format - Target format ('avif', 'webp', 'jpeg', etc).
- * @param {number} maxWidth - Maximum width of output image.
- * @param {number} maxHeight - Maximum height of output image.
- * @param {number} targetSize - Target file size in bytes.
- * @param {number} quality - Quality (1-100), higher is better quality.
- * @returns {Promise<{blob: Blob, previewURL: string, name: string}>}
- */
 export async function compressImage(file, format, maxWidth, maxHeight, targetSize, quality = 80) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
@@ -28,29 +17,25 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Squoosh AVIF expects { quality, speed, qualityAlpha }
     const avifOptions = {
       quality: quality,
       speed: 6,
-      qualityAlpha: quality
+      qualityAlpha: quality // <--- FIX
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Squoosh WebP expects { quality, lossless, qualityAlpha, method, image_hint, target_size }
     const webpOptions = {
       quality: quality,
       lossless: false,
       qualityAlpha: quality,
       method: 4,
-      image_hint: 0,
-      target_size: 0 // 0 disables, or you can set targetSize/1024 for KB
+      image_hint: 0 // <--- FIX
     };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
   } else {
-    // jpeg/png fallback, try to fit into targetSize
     let q = quality / 100;
     do {
       blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, q));
