@@ -90,10 +90,9 @@ downloadAllBtn.addEventListener("click", () => {
   } else {
     // Download each image individually
     readyImages.forEach(({ blob, name }, idx) => {
-      // Stagger downloads to avoid browser blocking (especially Chrome)
       setTimeout(() => {
         triggerDownload(blob, name);
-      }, idx * 150); // 150ms apart
+      }, idx * 150); // 150ms apart to avoid browser blocks
     });
   }
 });
