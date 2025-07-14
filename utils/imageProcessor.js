@@ -1,14 +1,7 @@
 import { encode as encodeAvif } from '../codecs/avif/avif_wrapper.js';
 import { encode as encodeWebp } from '../codecs/webp/webp_wrapper.js';
 
-export async function compressImage(
-  file,
-  format,
-  maxWidth,
-  maxHeight,
-  targetSize,
-  quality = 80
-) {
+export async function compressImage(file, format, maxWidth, maxHeight, targetSize, quality = 80) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -35,7 +28,8 @@ export async function compressImage(
       chromaDeltaQ: 0,
       tune: 0,
       denoiseLevel: 0,
-      enableSharpYUV: false // <--- NEW!
+      enableSharpYUV: false, // <--- Required!
+      // Add any new fields here if new errors appear
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
@@ -70,19 +64,20 @@ export async function compressImage(
       exact: false,
       use_delta_palette: false,
       use_sharp_yuv: false
+      // Add new fields here if new errors appear
     };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
   } else {
     let q = quality / 100;
     do {
-      blob = await new Promise((res) => canvas.toBlob(res, `image/${format}`, q));
+      blob = await new Promise(res => canvas.toBlob(res, `image/${format}`, q));
       q -= 0.05;
     } while (blob && blob.size > targetSize && q > 0.05);
   }
 
   if (!blob || blob.size === 0) {
-    throw new Error("Compression failed: No output blob");
+    throw new Error('Compression failed: No output blob');
   }
 
   const previewURL = URL.createObjectURL(blob);
@@ -94,7 +89,7 @@ export async function compressImage(
 }
 
 function loadImageFromFile(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
