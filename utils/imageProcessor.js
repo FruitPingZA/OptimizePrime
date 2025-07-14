@@ -20,7 +20,8 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
     const avifOptions = {
       quality: quality,
       speed: 6,
-      qualityAlpha: quality // <--- FIX
+      qualityAlpha: quality,
+      tileRowsLog2: 0 // <--- required field!
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
@@ -31,7 +32,8 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       lossless: false,
       qualityAlpha: quality,
       method: 4,
-      image_hint: 0 // <--- FIX
+      image_hint: 0,
+      target_size: 0 // <--- required field!
     };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
