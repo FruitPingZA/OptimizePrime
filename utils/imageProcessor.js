@@ -1,7 +1,14 @@
 import { encode as encodeAvif } from '../codecs/avif/avif_wrapper.js';
 import { encode as encodeWebp } from '../codecs/webp/webp_wrapper.js';
 
-export async function compressImage(file, format, maxWidth, maxHeight, targetSize, quality = 80) {
+export async function compressImage(
+  file,
+  format,
+  maxWidth,
+  maxHeight,
+  targetSize,
+  quality = 80
+) {
   const img = await loadImageFromFile(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -28,8 +35,7 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       chromaDeltaQ: 0,
       tune: 0,
       denoiseLevel: 0,
-      enableSharpYUV: false, // <--- Required!
-      // Add any new fields here if new errors appear
+      enableSharpYUV: false
     };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
@@ -64,7 +70,6 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
       exact: false,
       use_delta_palette: false,
       use_sharp_yuv: false
-      // Add new fields here if new errors appear
     };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
