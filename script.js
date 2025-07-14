@@ -6,10 +6,6 @@ const fileInput = document.getElementById("fileInput");
 const processBtn = document.getElementById("processBtn");
 const downloadAllBtn = document.getElementById("downloadAllBtn");
 const preview = document.getElementById("preview");
-const processBtn = document.getElementById("processBtn");
-const downloadAllBtn = document.getElementById("downloadAllBtn");
-const clearBtn = document.getElementById("clearBtn");
-const preview = document.getElementById("preview");
 
 let processedImages = [];
 
@@ -59,21 +55,6 @@ processBtn.addEventListener("click", async () => {
 
   renderPreviews(true);
 });
-  for (let imgObj of processedImages) {
-    try {
-      const result = await compressImage(imgObj.original, format, maxWidth, maxHeight, targetSize, quality);
-      imgObj.blob = result.blob;
-      imgObj.previewURL = result.previewURL;
-      imgObj.name = result.name;
-    } catch (e) {
-      console.error("Error compressing", imgObj.original.name, e);
-      alert(`Error compressing ${imgObj.original.name}: ${e.message}`);
-    }
-  }
-
-  renderPreviews(true);
-  clearBtn.style.display = "inline-block";
-});
 
 function renderPreviews(showCompressed = false) {
   preview.innerHTML = "";
@@ -114,36 +95,4 @@ downloadAllBtn.addEventListener("click", () => {
       }, idx * 150);
     });
   }
-});
-  if (readyImages.length > 10) {
-    // Download as ZIP
-    if (typeof JSZip === "undefined" || typeof saveAs === "undefined") {
-      alert("ZIP download is not available.");
-      return;
-    }
-    const zip = new JSZip();
-    readyImages.forEach(({ blob, name }) => {
-      zip.file(name, blob);
-    });
-
-    zip.generateAsync({ type: "blob" })
-      .then(content => {
-        saveAs(content, "optimized_images.zip");
-      })
-      .catch(err => alert("Failed to create ZIP: " + err));
-  } else {
-    // Download each image individually, not opening in new tab
-    readyImages.forEach(({ blob, name }, idx) => {
-      setTimeout(() => {
-        triggerDownload(blob, name);
-      }, idx * 150);
-    });
-  }
-});
-
-clearBtn.addEventListener("click", () => {
-  processedImages = [];
-  preview.innerHTML = "";
-  fileInput.value = "";
-  clearBtn.style.display = "none";
 });
