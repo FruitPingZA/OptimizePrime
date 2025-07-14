@@ -88,11 +88,11 @@ downloadAllBtn.addEventListener("click", () => {
       saveAs(content, "optimized_images.zip");
     });
   } else {
-    // Download each image individually
+    // Download each image individually, not opening in new tab
     readyImages.forEach(({ blob, name }, idx) => {
       setTimeout(() => {
         triggerDownload(blob, name);
-      }, idx * 150); // 150ms apart to avoid browser blocks
+      }, idx * 150);
     });
   }
 });
