@@ -1,4 +1,5 @@
 import { compressImage } from './utils/imageProcessor.js';
+import { triggerDownload } from './utils/downloadHelper.js';
 
 const dropArea = document.getElementById("dropArea");
 const fileInput = document.getElementById("fileInput");
@@ -58,10 +59,29 @@ processBtn.addEventListener("click", async () => {
 function renderPreviews(showCompressed = false) {
   preview.innerHTML = "";
   processedImages.forEach(({ blob, original, previewURL, name }) => {
+    const container = document.createElement("div");
+    container.style.display = "inline-block";
+    container.style.margin = "8px";
+    
     const img = document.createElement("img");
     img.src = showCompressed && previewURL ? previewURL : URL.createObjectURL(original);
     img.title = name || original.name;
-    preview.appendChild(img);
+    img.style.display = "block";
+    img.style.maxWidth = "150px";
+    img.style.maxHeight = "150px";
+    container.appendChild(img);
+
+    // Add download button for compressed image if available
+    if (showCompressed && blob && name) {
+      const dlBtn = document.createElement("button");
+      dlBtn.textContent = "Download";
+      dlBtn.addEventListener("click", () => {
+        triggerDownload(blob, name);
+      });
+      container.appendChild(dlBtn);
+    }
+
+    preview.appendChild(container);
   });
 }
 
