@@ -28,11 +28,13 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    const avifOptions = { cqLevel: 100 - quality, effort: 4 }; // Lower cqLevel = higher quality
+    // Squoosh AVIF expects { quality: 0-100, speed: 0-10 }
+    const avifOptions = { quality: quality, speed: 6 };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
+    // Squoosh WebP expects { quality: 0-100 }
     const webpOptions = { quality: quality };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
