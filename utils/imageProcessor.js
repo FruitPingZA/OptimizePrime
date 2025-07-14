@@ -28,19 +28,24 @@ export async function compressImage(file, format, maxWidth, maxHeight, targetSiz
   let blob;
   if (format === "avif") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Squoosh AVIF expects { quality: 0-100, speed: 0-10 }
-    const avifOptions = { quality: quality, speed: 6 };
+    // Squoosh AVIF expects { quality, speed, qualityAlpha }
+    const avifOptions = {
+      quality: quality,
+      speed: 6,
+      qualityAlpha: quality
+    };
     const encoded = await encodeAvif(imageData.data, newWidth, newHeight, avifOptions);
     blob = new Blob([encoded.buffer], { type: "image/avif" });
   } else if (format === "webp") {
     const imageData = ctx.getImageData(0, 0, newWidth, newHeight);
-    // Squoosh WebP expects { quality, lossless, qualityAlpha, method, image_hint }
+    // Squoosh WebP expects { quality, lossless, qualityAlpha, method, image_hint, target_size }
     const webpOptions = {
       quality: quality,
       lossless: false,
       qualityAlpha: quality,
       method: 4,
-      image_hint: 0
+      image_hint: 0,
+      target_size: 0 // 0 disables, or you can set targetSize/1024 for KB
     };
     const encoded = await encodeWebp(imageData.data, newWidth, newHeight, webpOptions);
     blob = new Blob([encoded.buffer], { type: "image/webp" });
